@@ -78,11 +78,39 @@ DWORD WINAPI HookThread(LPVOID) {
         return 0;
 	}
 
-    //uintptr_t address = baseAddress + 0x12345;
-    //DWORD oldProtect;
-    //VirtualProtect((void*)address, sizeof(int), PAGE_EXECUTE_READWRITE, &oldProtect);
-    //*(int*)address = 999;
-    //VirtualProtect((void*)address, sizeof(int), oldProtect, &oldProtect);
+	char UP = 'I', DOWN = 'K', LEFT = 'J', RIGHT = 'L', WALK = 'U';
+	float maxDistanceX = 400.0f;
+	float maxDistanceY = 250.0f;
+	std::ifstream config("coop_config.txt");
+	// If the config file doesn't exist, create it with default values
+	if (!config.is_open()) {
+		std::ofstream newConfig("coop_config.txt");
+		newConfig << "Up = I\n";
+		newConfig << "Down = K\n";
+		newConfig << "Left = J\n";
+		newConfig << "Right = L\n";
+		newConfig << "Walk = U\n";
+		newConfig << "MaxDistanceX = 400.0\n";
+		newConfig << "MaxDistanceY = 250.0\n";
+
+		newConfig.close();
+		OutputDebugStringA("Config file created with default values");
+	}
+	// If the config file exists, read the key bindings
+    else {
+        std::string key, value;
+        while (std::getline(config, key, '=') && std::getline(config, value)) {
+			key.erase(std::remove_if(key.begin(), key.end(), ::isspace), key.end());
+			value.erase(std::remove_if(value.begin(), value.end(), ::isspace), value.end());
+            if (key.find("Up") != std::string::npos) UP = value[0];
+            else if (key.find("Down") != std::string::npos) DOWN = value[0];
+            else if (key.find("Left") != std::string::npos) LEFT = value[0];
+            else if (key.find("Right") != std::string::npos) RIGHT = value[0];
+            else if (key.find("Walk") != std::string::npos) WALK = value[0];
+            else if (key.find("MaxDistanceX") != std::string::npos) maxDistanceX = std::stof(value);
+            else if (key.find("MaxDistanceY") != std::string::npos) maxDistanceY = std::stof(value);
+        }
+    }
 
     int posXAddr[2] = { baseAddress + 0x1453D0, 0x14 };
 	int TarfToggle = baseAddress + 0x25d3f0;
@@ -90,13 +118,18 @@ DWORD WINAPI HookThread(LPVOID) {
 	int TarfData = baseAddress + 0x1453D8;
 	int TarfScan[2] = { baseAddress + 0x1453D4, 0x1DC };
 	int TarfUI = baseAddress + 0x25D3F4;
+    int TarfStats = baseAddress + 0x12C3F0;
 	int ResetSpeedCode = baseAddress + 0x1A0D4;
 	int ResetAnimCode = baseAddress + 0x1A0E3;
-	int TarfRoomCheckCode = baseAddress + 0x4CAB2;
+	int TarfRoomCheckCode = baseAddress + 0x8DA04;
+    int CanMove = baseAddress + 0x135884;
+    int AdolRoom = baseAddress + 0x25c730;
 
 	WriteBytes(ResetSpeedCode, "\x90\x90\x90\x90\x90\x90\x90", 7); //Nop out speed reset
 	WriteBytes(ResetAnimCode, "\x90\x90\x90\x90\x90\x90\x90", 7);
-	WriteBytes(TarfRoomCheckCode, "\x90\x90\x90\x90\x90\x90", 6);
+	WriteBytes(TarfRoomCheckCode, "\x90\x90\xB3\x00", 4);
+
+	int adolLastHP = ReadValue<short>(AdolData + 0xA0);
 
     while (true) {
         Sleep(10);
@@ -112,18 +145,29 @@ DWORD WINAPI HookThread(LPVOID) {
         }
 		int tarf = ReadValue<int>(TarfData);
 
+        bool allowTarf = ReadValue<int>(TarfStats) >= 10 || ReadValue<int>(AdolRoom) != 98;
 		WriteValue(adol + 0x24, 0.0f); //Reset Adol's speed to prevent sliding
-		WriteValue<char>(TarfToggle, 44); //Keep Tarf active
+		WriteValue<char>(TarfToggle, allowTarf ? 44 : 0); //Keep Tarf active
+        if (ReadValue<int>(AdolRoom) == 81 && ReadValue<float>(adol + 0x18) < 700.0f) {
+            WriteValue(TarfStats, std::max<int>(10, ReadValue<int>(TarfStats))); // Picked up Tarf, allow progress
+        }
 
         if (ReadValue<int>(tarf) > baseAddress && ReadValue<int>(TarfUI) > 0) {
             WriteValue(tarf, 0x50B448);
-            WriteValue(tarf + 0x1D8, 1);  //Character type
+            //WriteValue(tarf + 0x1D8, 1);  //Character type
             WriteValue(tarf + 0x1DC, 2);    //Character sprite
+			WriteValue(TarfStats + 4, ReadValue<short>(adol + 0xA4)); //Copy Tarf's HP from Adol's HP
+            WriteValue(TarfStats + 6, ReadValue<short>(adol + 0xB0)); //Copy Tarf's STR from Adol's STR
+            WriteValue(TarfStats + 8, ReadValue<short>(adol + 0xB4)); //Copy Tarf's DEF from Adol's DEF
+			short curHP = ReadValue<short>(adol + 0xA0);
+            if(curHP > adolLastHP && adolLastHP > 0)
+				WriteValue(tarf + 0xA0, ReadValue<short>(tarf + 0xA0) + curHP - adolLastHP);
 
-			float verticalDir = (GetKeyState('I') & 0x8000) ? 1.0f : ((GetKeyState('K') & 0x8000) ? -1.0f : 0.0f);
-			float horizontalDir = (GetKeyState('L') & 0x8000) ? 1.0f : ((GetKeyState('J') & 0x8000) ? -1.0f : 0.0f);
+			float verticalDir = (GetKeyState(UP) & 0x8000) ? 1.0f : ((GetKeyState(DOWN) & 0x8000) ? -1.0f : 0.0f);
+			float horizontalDir = (GetKeyState(RIGHT) & 0x8000) ? 1.0f : ((GetKeyState(LEFT) & 0x8000) ? -1.0f : 0.0f);
+            float speed = GetKeyState(WALK) & 0x8000 ? 1.5f : 3.5f;
 
-            if(verticalDir != 0 || horizontalDir != 0) {
+            if((verticalDir != 0 || horizontalDir != 0) && !ReadValue<int>(CanMove)) {
                 float rotation = 0;
                 if (verticalDir < 0)
                     rotation = 1024.0f - horizontalDir * 512.0f;
@@ -132,24 +176,26 @@ DWORD WINAPI HookThread(LPVOID) {
                 else
 					rotation = horizontalDir < 0 ? 2048.0f : 0.0f;
 
-                WriteValue(tarf + 0x24, 3.5f);
+                WriteValue(tarf + 0x24, speed);
 				WriteValue(tarf + 0x28, rotation);
 				WriteValue(tarf + 0x2C, rotation);
-				WriteValue<char>(tarf + 0x1D1, 1);
+				WriteValue<char>(tarf + 0x1D1, speed > 2.0f ? 1 : 0);
 			}
             else
                 WriteValue(tarf + 0x24, 0.0f);
 
-            if(std::abs(ReadValue<float>(tarf + 0x14) - ReadValue<float>(adol + 0x14)) > 350.0f
-            || std::abs(ReadValue<float>(tarf + 0x18) - ReadValue<float>(adol + 0x18)) > 200.0f) {
+            if(std::abs(ReadValue<float>(tarf + 0x14) - ReadValue<float>(adol + 0x14)) > maxDistanceX
+            || std::abs(ReadValue<float>(tarf + 0x18) - ReadValue<float>(adol + 0x18)) > maxDistanceY) {
                 WriteValue(tarf + 0x14, ReadValue<float>(adol + 0x14)+25.0f);
                 WriteValue(tarf + 0x18, ReadValue<float>(adol + 0x18)+25.0f);
             }
         }
 
-		//float posX = ReadValue<float>(posXAddr, 2);
-  //      sprintf_s(buffer, "PosX: %.f", posX);
-  //      OutputDebugStringA(buffer);
+        adolLastHP = ReadValue<short>(adol + 0xA0);
+
+        //float posX = ReadValue<float>(posXAddr, 2);
+        //sprintf_s(buffer, "PosX: %.f", posX);
+        //OutputDebugStringA(buffer);
     }
     return 0;
 }
