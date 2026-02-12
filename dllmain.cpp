@@ -273,6 +273,7 @@ void Ys1() {
         if (ReadValue<int>(feena) == 0x4DB12C || ReadValue<int>(feena) == 0x4DAE1C) {
             //WriteValue(feena, 0x4DAE1C);
             WriteValue<char>(feena + 0x250, ReadValue<char>(adol + 0x250));
+            WriteValue<char>(feena + 0x1CC, ReadValue<char>(adol + 0x1CC)); //Disable Feena specific damage
             //WriteValue<char>(feena + 0x160, ReadValue<char>(adol + 0x160));
             WriteValue(feena + 0x4C, ReadValue<int>(adol+0x4C));    //Character sprite
             float prevMaxHP = ReadValue<short>(FeenaHP + 4);
@@ -289,7 +290,8 @@ void Ys1() {
                 WriteValue(feena+0x180, ReadValue<short>(feena+0x180) + curHP - adolLastHP);
 			//WriteValue(FeenaHP, ReadValue<short>(feena + 0x180)); //Sync visual HP with actual HP
 			WriteValue(feena+0x180, ReadValue<short>(FeenaHP)); //Sync visual HP with actual HP
-
+            if(ReadValue<short>(feena + 0x180) <= 0)
+				WriteValue<char>(feena + 0x19C, 1); //If Feena is dead, death animation
 
     //        int verticalDir = (GetKeyState(UP) & 0x8000) ? 1 : ((GetKeyState(DOWN) & 0x8000) ? -1 : 0);
     //        int horizontalDir = (GetKeyState(RIGHT) & 0x8000) ? 1 : ((GetKeyState(LEFT) & 0x8000) ? -1 : 0);
