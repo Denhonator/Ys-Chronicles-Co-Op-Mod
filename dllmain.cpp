@@ -147,10 +147,60 @@ void Ys2() {
     }
 }
 
+void __fastcall Ys1MovementHook(void* arg1) {
+    int Running = baseAddress + 0x142628;
+    int FeenaData = baseAddress + 0x142C2C;
+    int AdolInput = baseAddress + 0x14BC18;
+
+    int ecxValue = 0;
+    __asm {
+        mov ecxValue, ecx
+    }
+
+    int prevRunning = ReadValue<char>(Running);
+    int prevMoving = ReadValue<char>(AdolInput + 0x31);
+    int prevDirection = ReadValue<char>(AdolInput + 0x40);
+    int prevRotation = ReadValue<char>(AdolInput + 0x38);
+    int prevHorizontal = ReadValue<char>(AdolInput);
+
+    int verticalDir = (GetKeyState(UP) & 0x8000) ? 1 : ((GetKeyState(DOWN) & 0x8000) ? -1 : 0);
+    int horizontalDir = (GetKeyState(RIGHT) & 0x8000) ? 1 : ((GetKeyState(LEFT) & 0x8000) ? -1 : 0);
+    int speed = GetKeyState(WALK) & 0x8000 ? 640 : 1152;
+
+    WriteValue(Running, (verticalDir != 0 || horizontalDir != 0) && speed > 640 ? 1 : 0);
+    WriteValue(AdolInput + 0x31, (verticalDir != 0 || horizontalDir != 0) ? 1 : 0);
+    WriteValue(AdolInput, horizontalDir > 0 ? 2 : horizontalDir < 0 ? 1 : 0);
+    if ((verticalDir != 0 || horizontalDir != 0)) {
+        WriteValue(AdolInput + 0x40, horizontalDir > 0 ? 6 : horizontalDir < 0 ? 5 : verticalDir < 0 ? 4 : verticalDir > 0 ? 3 : 0);
+
+        int rotation = 0;
+        if (verticalDir > 0)
+            rotation = 64 - horizontalDir * 32;
+        else if (verticalDir < 0)
+            rotation = 192 + horizontalDir * 32;
+        else
+            rotation = horizontalDir < 0 ? 128 : 0;
+
+        WriteValue(AdolInput + 0x38, rotation);
+        WriteValue(AdolInput + 0x28, ReadValue<int>(AdolInput + 0x28) + 16);
+    }
+
+    typedef void(__fastcall* OrigFunc)(void*);
+    void* originalFunc = (void*)(baseAddress + 0x1B550);
+    ((OrigFunc)originalFunc)(arg1);
+
+	WriteValue(Running, prevRunning);
+    WriteValue(AdolInput + 0x31, prevMoving);
+    WriteValue(AdolInput + 0x40, prevDirection);
+    WriteValue(AdolInput + 0x38, prevRotation);
+	WriteValue(AdolInput, prevHorizontal);
+}
+
 void Ys1() {
     int FeenaActive = baseAddress + 0x131C44;
     int AdolData = baseAddress + 0x14061C;
-    int FeenaData = baseAddress + 0x142C2C;
+    //int FeenaData = baseAddress + 0x142C2C;
+    int FeenaData = baseAddress + 0x14061C;
     int AdolCurStats = baseAddress + 0x131694;
     int AdolHP = baseAddress + 0x1317FC;
     int FeenaHP = AdolHP + 0x20;
@@ -164,62 +214,62 @@ void Ys1() {
     int FeenaRoom = baseAddress + 0x13169C;
     int NextRoom = baseAddress + 0x131554;
     int cam = baseAddress + 0x127DFC;
+    int FeenaMoveFuncPointer = baseAddress + 0xDB140;
+    int AdolMoveFuncPointer = baseAddress + 0xDAE30;
 
-	WriteBytes(ResetSpeedCode, "\xEB\x0F", 2); //jmp over speed reset
-    WriteBytes(RunToggleCode, "\x66\x81\x7B\x18\x80\x02\x76\x04", 8);
+	//WriteBytes(ResetSpeedCode, "\xEB\x0F", 2); //jmp over speed reset
+    //WriteBytes(RunToggleCode, "\x66\x81\x7B\x18\x80\x02\x76\x04", 8);
     //WriteBytes(RunAudioCode, "\x66\x81\x7B\x18\x80\x02\x90", 7);
     //WriteBytes(MoveAnimCode, "\x83\x7B\x18\x00\x90", 5);
     WriteBytes(FeenaRoomCheckCode, "\x90\x90", 2);
+	char bytes[4];	
+    *(int*)bytes = (int)Ys1MovementHook;
+    WriteBytes(FeenaMoveFuncPointer, bytes, 4);
+	//*(int*)bytes = ReadValue<int>(AdolMoveFuncPointer+0xC);
+    //WriteBytes(FeenaMoveFuncPointer + 0xC, bytes, 4);
 
-    int adolLastHP = ReadValue<short>(AdolHP);
+    int adolLastHP = 0;
+
+	char buffer[512];
+    sprintf_s(buffer, "Hook address: 0x%p\n", (void*)(int)Ys1MovementHook);
+    OutputDebugStringA(buffer);
 
     while (true) {
         Sleep(10);
 
         int adol = ReadValue<int>(AdolData);
-        int feena = ReadValue<int>(FeenaData);
+        int feena = adol + 0x480;
+        while (feena >= baseAddress) {
+            if (ReadValue<int>(feena) == 0x4DB12C) {
+                break;
+            }
+            feena += 0x480;
+		}
 
         bool allowFeena = true;
-        //WriteValue(adol + 0x24, 0.0f); //Reset Adol's speed to prevent sliding
         WriteValue<char>(FeenaActive, allowFeena ? 1 : 0); //Keep Feena active
 
         if (ReadValue<int>(feena) == 0x4DB12C || ReadValue<int>(feena) == 0x4DAE1C) {
             int nextRoom = ReadValue<int>(NextRoom);
-            if (nextRoom > 0)
+            if (nextRoom > 0) {
                 WriteValue(FeenaRoom, ReadValue<int>(NextRoom)); //Keep Feena in the same room as Adol
-            WriteValue(feena, 0x4DAE1C);
-            WriteValue<char>(feena + 0x250, 1); //Allows running without slowing down
-            //WriteValue(tarf + 0x1D8, 1);  //Character type
+            }
+            //WriteValue(feena, 0x4DAE1C);
+            WriteValue<char>(feena + 0x250, ReadValue<char>(adol + 0x250));
+            //WriteValue<char>(feena + 0x160, ReadValue<char>(adol + 0x160));
             WriteValue(feena + 0x4C, ReadValue<int>(adol+0x4C));    //Character sprite
             float prevMaxHP = ReadValue<short>(FeenaHP + 4);
             WriteValue(FeenaHP + 4, ReadValue<short>(AdolHP+4));        //Copy Feena's HP from Adol's HP
             WriteValue(FeenaHP + 8, ReadValue<short>(AdolCurStats));    //Copy Feena's STR from Adol's STR
             WriteValue(FeenaHP + 12, ReadValue<short>(AdolCurStats+4)); //Copy Feena's DEF from Adol's DEF
-            short curHP = ReadValue<short>(AdolHP);
+            short curHP = ReadValue<short>(adol+0x180);
             if (prevMaxHP < ReadValue<short>(FeenaHP + 4))
-                WriteValue(FeenaHP, ReadValue<short>(FeenaHP + 4)); //If Feena's max HP increased, heal him to full
-            if (curHP > adolLastHP && adolLastHP > 0)
-                WriteValue(FeenaHP, ReadValue<short>(FeenaHP) + curHP - adolLastHP);
-
-            int verticalDir = (GetKeyState(UP) & 0x8000) ? 1 : ((GetKeyState(DOWN) & 0x8000) ? -1 : 0);
-            int horizontalDir = (GetKeyState(RIGHT) & 0x8000) ? 1 : ((GetKeyState(LEFT) & 0x8000) ? -1 : 0);
-            int speed = GetKeyState(WALK) & 0x8000 ? 640 : 1152;
-
-            if ((verticalDir != 0 || horizontalDir != 0) && !ReadValue<int>(CanMove)) {
-                int rotation = 0;
-                if (verticalDir > 0)
-                    rotation = 64 - horizontalDir * 32;
-                else if (verticalDir < 0)
-                    rotation = 192 + horizontalDir * 32;
-                else
-                    rotation = horizontalDir < 0 ? 128 : 0;
-
-                WriteValue(feena + 0x18, speed);
-                WriteValue(feena + 0x14, rotation);
-                //WriteValue<char>(tarf + 0x1D1, speed > 2.0f ? 1 : 0);
-            }
-            else
-                WriteValue(feena + 0x18, 0);
+                WriteValue(feena+0x180, ReadValue<short>(FeenaHP + 4)); //If Feena's max HP increased, heal her to full
+            if (curHP - adolLastHP > 5 && adolLastHP > 0)
+                WriteValue(feena+0x180, ReadValue<short>(feena+0x180) + curHP - adolLastHP);
+            if (ReadValue<short>(feena+0x180) < ReadValue<short>(FeenaHP))
+				WriteValue(feena + 0x180, ReadValue<short>(FeenaHP));
+			WriteValue(FeenaHP, ReadValue<short>(feena + 0x180)); //Sync visual HP with actual HP
 
             int camCenterX = ReadValue<int>(cam) + 296;
             int camCenterY = ReadValue<int>(cam + 4) + 192;
@@ -230,7 +280,7 @@ void Ys1() {
             }
         }
 
-        adolLastHP = ReadValue<short>(AdolHP);
+        adolLastHP = ReadValue<short>(adol+0x180);
     }
 }
 
