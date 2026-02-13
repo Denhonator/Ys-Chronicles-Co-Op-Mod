@@ -150,14 +150,12 @@ void Ys2() {
 }
 
 void __fastcall Ys1MovementHook(void* arg1) {
-    int Running = baseAddress + 0x142628;
-    int AdolInput = baseAddress + 0x14BC18;
-
     int ecxValue = 0;
     __asm {
-        mov ecxValue, ecx
+        mov ecxValue, esi
     }
-    feena = ecxValue;
+    int Running = baseAddress + 0x142628;
+    int AdolInput = baseAddress + 0x14BC18;
 
     int prevRunning = ReadValue<char>(Running);
     int prevMoving = ReadValue<char>(AdolInput + 0x31);
@@ -165,26 +163,28 @@ void __fastcall Ys1MovementHook(void* arg1) {
     int prevRotation = ReadValue<char>(AdolInput + 0x38);
     int prevHorizontal = ReadValue<char>(AdolInput);
 
-    int verticalDir = (GetKeyState(UP) & 0x8000) ? 1 : ((GetKeyState(DOWN) & 0x8000) ? -1 : 0);
-    int horizontalDir = (GetKeyState(RIGHT) & 0x8000) ? 1 : ((GetKeyState(LEFT) & 0x8000) ? -1 : 0);
-    int speed = GetKeyState(WALK) & 0x8000 ? 640 : 1152;
+    if (ecxValue == feena) {
+        int verticalDir = (GetKeyState(UP) & 0x8000) ? 1 : ((GetKeyState(DOWN) & 0x8000) ? -1 : 0);
+        int horizontalDir = (GetKeyState(RIGHT) & 0x8000) ? 1 : ((GetKeyState(LEFT) & 0x8000) ? -1 : 0);
+        int speed = GetKeyState(WALK) & 0x8000 ? 640 : 1152;
 
-    WriteValue(Running, (verticalDir != 0 || horizontalDir != 0) && speed > 640 ? 1 : 0);
-    WriteValue(AdolInput + 0x31, (verticalDir != 0 || horizontalDir != 0) ? 1 : 0);
-    WriteValue(AdolInput, horizontalDir > 0 ? 2 : horizontalDir < 0 ? 1 : 0);
-    if ((verticalDir != 0 || horizontalDir != 0)) {
-        WriteValue(AdolInput + 0x40, horizontalDir > 0 ? 6 : horizontalDir < 0 ? 5 : verticalDir < 0 ? 4 : verticalDir > 0 ? 3 : 0);
+        WriteValue(Running, (verticalDir != 0 || horizontalDir != 0) && speed > 640 ? 1 : 0);
+        WriteValue(AdolInput + 0x31, (verticalDir != 0 || horizontalDir != 0) ? 1 : 0);
+        WriteValue(AdolInput, horizontalDir > 0 ? 2 : horizontalDir < 0 ? 1 : 0);
+        if ((verticalDir != 0 || horizontalDir != 0)) {
+            WriteValue(AdolInput + 0x40, horizontalDir > 0 ? 6 : horizontalDir < 0 ? 5 : verticalDir < 0 ? 4 : verticalDir > 0 ? 3 : 0);
 
-        int rotation = 0;
-        if (verticalDir > 0)
-            rotation = 64 - horizontalDir * 32;
-        else if (verticalDir < 0)
-            rotation = 192 + horizontalDir * 32;
-        else
-            rotation = horizontalDir < 0 ? 128 : 0;
+            int rotation = 0;
+            if (verticalDir > 0)
+                rotation = 64 - horizontalDir * 32;
+            else if (verticalDir < 0)
+                rotation = 192 + horizontalDir * 32;
+            else
+                rotation = horizontalDir < 0 ? 128 : 0;
 
-        WriteValue(AdolInput + 0x38, rotation);
-        WriteValue(AdolInput + 0x28, ReadValue<int>(AdolInput + 0x28) + 16);
+            WriteValue(AdolInput + 0x38, rotation);
+            WriteValue(AdolInput + 0x28, ReadValue<int>(AdolInput + 0x28) + 16);
+        }
     }
 
     typedef void(__fastcall* OrigFunc)(void*);
@@ -201,13 +201,15 @@ void __fastcall Ys1MovementHook(void* arg1) {
 void __fastcall Ys1DamageHook(uint32_t arg1) {
     int FeenaHP = baseAddress + 0x13181C;
 
-    WriteBytes(baseAddress + 0x1CF01, "\x1C\x18", 2);
+    if((int)arg1 == feena)
+        WriteBytes(baseAddress + 0x1CF01, "\x1C\x18", 2);
 
     typedef void(__fastcall* OrigFunc)(uint32_t);
     void* originalFunc = (void*)(baseAddress + 0x1C1D0);
     ((OrigFunc)originalFunc)(arg1);
 
-    WriteBytes(baseAddress + 0x1CF01, "\xFC\x17", 2);
+    if ((int)arg1 == feena)
+        WriteBytes(baseAddress + 0x1CF01, "\xFC\x17", 2);
 }
 
 void Ys1() {
@@ -235,43 +237,39 @@ void Ys1() {
     //WriteBytes(RunAudioCode, "\x66\x81\x7B\x18\x80\x02\x90", 7);
     //WriteBytes(MoveAnimCode, "\x83\x7B\x18\x00\x90", 5);
     WriteBytes(FeenaRoomCheckCode, "\x90\x90", 2);
+	//int origFeenaMoveFunc = ReadValue<int>(FeenaMoveFuncPointer);
 	char bytes[4];	
     *(int*)bytes = (int)Ys1MovementHook;
-    WriteBytes(FeenaMoveFuncPointer, bytes, 4);
-    //*(int*)bytes = ReadValue<int>(AdolMoveFuncPointer - 4);
-    //WriteBytes(FeenaMoveFuncPointer - 4, bytes, 4);
-	//*(int*)bytes = ReadValue<int>(AdolMoveFuncPointer+0xC);
+    WriteBytes(AdolMoveFuncPointer, bytes, 4);
 	*(int*)bytes = (int)Ys1DamageHook;
-    WriteBytes(FeenaMoveFuncPointer + 0xC, bytes, 4);
+    WriteBytes(AdolMoveFuncPointer + 0xC, bytes, 4);
 
     int adolLastHP = 0;
     bool allowFeena = true;
-
-	char buffer[512];
-    sprintf_s(buffer, "Hook address: 0x%p\n", (void*)(int)Ys1MovementHook);
-    OutputDebugStringA(buffer);
 
     while (true) {
         Sleep(10);
 
         int adol = ReadValue<int>(AdolData);
-        //int feena = adol + 0x480;
+        feena = adol + 0x480;
 
-        //while (feena >= baseAddress && ReadValue<char>(FeenaActive)) {
-        //    if (ReadValue<int>(feena) == 0x4DB12C) {
-        //        break;
-        //    }
-        //    feena += 0x480;
-        //}
+        while (feena >= baseAddress && ReadValue<char>(FeenaActive)) {
+            if (ReadValue<int>(feena + 0x160) == 2) {
+                break;
+            }
+            feena += 0x480;
+        }
 
         int nextRoom = ReadValue<int>(NextRoom);
+        allowFeena = ReadValue<int>(NextRoom) != 36;
+        int feenaQuest = false;
         if (nextRoom > 1 && adol > baseAddress) {
             WriteValue(FeenaRoom, nextRoom); //Keep Feena in the same room as Adol
             WriteValue<char>(FeenaActive, allowFeena ? 1 : 0); //Keep Feena active
         }
 
-        if (ReadValue<int>(feena) == 0x4DB12C || ReadValue<int>(feena) == 0x4DAE1C) {
-            //WriteValue(feena, 0x4DAE1C);
+        if (ReadValue<int>(feena + 0x160) == 2 && !feenaQuest && ReadValue<char>(FeenaActive)) {
+            WriteValue(feena, 0x4DAE1C);
             WriteValue<char>(feena + 0x250, ReadValue<char>(adol + 0x250));
             WriteValue<char>(feena + 0x1CC, ReadValue<char>(adol + 0x1CC)); //Disable Feena specific damage
             //WriteValue<char>(feena + 0x160, ReadValue<char>(adol + 0x160));
