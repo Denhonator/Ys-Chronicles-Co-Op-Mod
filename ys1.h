@@ -149,12 +149,14 @@ public:
             AdolMoveFuncPointer = baseAddress + 0xDAE30,
             DamageRedirectCall = baseAddress + 0x1C4D7,
             FeenaStatShowCode = baseAddress + 0x9F10D,
-            FeenaHPBarCode = baseAddress + 0x56C46;
+            FeenaHPBarCode = baseAddress + 0x56C46,
+            FeenaHPBarCode2 = baseAddress + 0x5525E;
 
 
         //WriteBytes(FeenaRoomCheckCode, "\x90\x90", 2);
         WriteBytes(FeenaStatShowCode, "\x90\x90\x90\x90\x90\x90", 6);
-        //WriteBytes(FeenaHPBarCode, "\x90\x90", 2);
+        WriteBytes(FeenaHPBarCode, "\x90\x90", 2);
+        WriteBytes(FeenaHPBarCode2, "\x90\x90", 2);
 
         char bytes[4];
         *(int*)bytes = (int)Ys1MovementHook;
@@ -187,6 +189,7 @@ public:
 			//WriteValue<int>(FeenaActive, nextRoom == 0 ? 1 : 0);
 
             if (nextRoom == 0 && ReadValue<int>(feena) == 0x4DAE1C) {
+				WriteValue<int>(FeenaActive+0x20, 1);   //HP bar
                 //WriteValue(feena, 0x4DAE1C);
                 WriteValue<char>(feena + 0x250, ReadValue<char>(adol + 0x250));
                 WriteValue<char>(feena + 0x1CC, ReadValue<char>(adol + 0x1CC)); //Disable Feena specific damage
@@ -209,7 +212,7 @@ public:
                 if (ReadValue<int>(feena + 0x18) == 0 && ReadValue<int>(feena + 0x20) == 0 && ReadValue<char>(AdolHP+0x29C) && ReadValue<int>(FeenaHP) < ReadValue<int>(FeenaHP+4) && !ReadValue<char>(pause+0x34)) {
                     //If Feena is not moving
                     feenaRegenTimer += 10;
-                    if (feenaRegenTimer >= 300) {
+                    if (feenaRegenTimer >= 315 - (ReadValue<int>(FeenaHP+4) * 85) / 100) {
                         WriteValue<short>(FeenaHP, ReadValue<short>(FeenaHP) + 1);
                         feenaRegenTimer = 0;
                     }
