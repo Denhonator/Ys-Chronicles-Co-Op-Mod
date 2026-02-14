@@ -5,7 +5,7 @@ Player 1 is the main player. Camera will follow him and some interactions are on
 
 This mod works for both Ys 1 and Ys 2, although the implementations differ as the games are programmed surprisingly differently. It should work whether you start a new game or load existing unmodded saves or saves made with this mod.
 
-### Install: For both games, simply unzip the mod into the game folder, next to the exe.
+### Install: For both games, simply unzip the mod from the releases into the game folder, next to the exe.
 
 To uninstall, remove the dbghelp dll files. If loading a co-op save, it should revert to normal when changing rooms.
 
