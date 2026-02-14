@@ -40,7 +40,7 @@ void __fastcall Ys1MovementHook(void* arg1) {
             WriteValue(AdolInput + 0x28, ReadValue<int>(AdolInput + 0x28) + 16);
         }
     }
-
+    
     typedef void(__fastcall* OrigFunc)(void*);
     void* originalFunc = (void*)(baseAddress + 0x1B550);
     ((OrigFunc)originalFunc)(arg1);
@@ -220,6 +220,12 @@ public:
                 WriteValue(feena + 0x180, ReadValue<short>(FeenaHP)); //Sync visual HP with actual HP
                 if (ReadValue<short>(feena + 0x180) <= 0)
                     WriteValue<char>(feena + 0x19C, 1); //If Feena is dead, death animation
+                if (ReadValue<char>(pause + 0x1F0)) {
+                    WriteValue<int>(FeenaHP, 0);
+                    WriteValue<int>(AdolHP, 0);
+                    WriteValue<char>(feena + 0x19C, 1);
+                    WriteValue<char>(adol + 0x19C, 1);
+                }
 
                 //        int verticalDir = (GetKeyState(UP) & 0x8000) ? 1 : ((GetKeyState(DOWN) & 0x8000) ? -1 : 0);
                 //        int horizontalDir = (GetKeyState(RIGHT) & 0x8000) ? 1 : ((GetKeyState(LEFT) & 0x8000) ? -1 : 0);
