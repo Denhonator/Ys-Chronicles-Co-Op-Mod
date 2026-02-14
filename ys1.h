@@ -68,16 +68,9 @@ void __fastcall Ys1DamageHook(uint32_t arg1) {
         "\x25\x00\x00\x00\x02\x00\x00\x00\x14\x00\x00\x00\xE1\xFF\xFF\xFF\x00\x00\x00\x00\x20\x20\x20\x20\x20\x20\x50\x31\x00\x00\x00\x00" :
         "\x15\x00\x00\x00\x02\x00\x00\x00\x14\x00\x00\x00\xE1\xFF\xFF\xFF\x00\x00\x00\x00\x20\x20\x20\x20\x20\x20\x50\x32\x00\x00\x00\x00", 32); //Enable player text
 
-    //if ((int)arg1 != adol)
-    //    WriteBytes(baseAddress + 0x1CF01, "\x1C\x18", 2);
-
     typedef void(__fastcall* OrigFunc)(uint32_t);
     void* originalFunc = (void*)(baseAddress + 0x1C1D0);
     ((OrigFunc)originalFunc)(arg1);
-
-    //if ((int)arg1 != adol) {
-    //    WriteBytes(baseAddress + 0x1CF01, "\xFC\x17", 2);
-    //}
 
 	if ((int)arg1 == adol) {
         int FeenaData = AdolData + 4;
@@ -151,13 +144,17 @@ public:
             FeenaRoom = baseAddress + 0x13169C,
             NextRoom = baseAddress + 0x131554,
             cam = baseAddress + 0x127DFC,
+            pause = baseAddress + 0x131518,
             FeenaMoveFuncPointer = baseAddress + 0xDB140,
             AdolMoveFuncPointer = baseAddress + 0xDAE30,
             DamageRedirectCall = baseAddress + 0x1C4D7,
-            FeenaStatShowCode = baseAddress + 0x9F10D;
+            FeenaStatShowCode = baseAddress + 0x9F10D,
+            FeenaHPBarCode = baseAddress + 0x56C46;
+
 
         //WriteBytes(FeenaRoomCheckCode, "\x90\x90", 2);
         WriteBytes(FeenaStatShowCode, "\x90\x90\x90\x90\x90\x90", 6);
+        //WriteBytes(FeenaHPBarCode, "\x90\x90", 2);
 
         char bytes[4];
         *(int*)bytes = (int)Ys1MovementHook;
@@ -169,6 +166,7 @@ public:
         WriteBytes(DamageRedirectCall + 1, bytes, 4);
 
         int adolLastHP = 0;
+        int feenaRegenTimer = 0;
 
         while (true) {
             Sleep(10);
@@ -207,6 +205,18 @@ public:
                 if (curHP - adolLastHP > 5 && adolLastHP > 0)
                     WriteValue(feena + 0x180, ReadValue<short>(feena + 0x180) + curHP - adolLastHP);
                 //WriteValue(FeenaHP, ReadValue<short>(feena + 0x180)); //Sync visual HP with actual HP
+
+                if (ReadValue<int>(feena + 0x18) == 0 && ReadValue<int>(feena + 0x20) == 0 && ReadValue<char>(AdolHP+0x29C) && ReadValue<int>(FeenaHP) < ReadValue<int>(FeenaHP+4) && !ReadValue<char>(pause+0x34)) {
+                    //If Feena is not moving
+                    feenaRegenTimer += 10;
+                    if (feenaRegenTimer >= 300) {
+                        WriteValue<short>(FeenaHP, ReadValue<short>(FeenaHP) + 1);
+                        feenaRegenTimer = 0;
+                    }
+                }
+                else
+					feenaRegenTimer = 0;
+
                 WriteValue(feena + 0x180, ReadValue<short>(FeenaHP)); //Sync visual HP with actual HP
                 if (ReadValue<short>(feena + 0x180) <= 0)
                     WriteValue<char>(feena + 0x19C, 1); //If Feena is dead, death animation
