@@ -7,6 +7,8 @@ bool prevMagic = false;
 float magicCharge = 0;
 char magicChargeAddr[4];
 char origMagicChargeBytes[4];
+float regenTimer1 = 0;
+float regenTimer2 = 0;
 
 int32_t __fastcall AdolMoveHook(void* arg1) {
     int Input = baseAddress + 0x25E398;
@@ -36,11 +38,11 @@ int32_t __fastcall AdolMoveHook(void* arg1) {
   //  }
 
     if ((int)arg1 == tarf) {
+        int CanRest = baseAddress + 0x25D2BC;
 		int MPCharge = baseAddress + 0x25D3AC;
 		bool isDown = GetKeyState(ACTION) & 0x8000;
 		magicInput[9] = isDown && !prevMagic;
 		magicInput[10] = isDown ? 1 : 0;
-
 
         WriteBytes(baseAddress + 0x1CBFC + 4, magicChargeAddr, 4);
         WriteBytes(baseAddress + 0x1CC0B + 4, magicChargeAddr, 4);
@@ -65,6 +67,22 @@ int32_t __fastcall AdolMoveHook(void* arg1) {
         WriteBytes(baseAddress + 0x1C513 + 4, origMagicChargeBytes, 4);
 
 		prevMagic = isDown;
+
+        if (ReadValue<char>(CanRest) && ReadValue<float>(tarf + 0x24) == 0 && ReadValue<float>(tarf + 0x4C) == 0 && ReadValue<int>(tarf + 0xA0) < ReadValue<int>(tarf + 0xA4)) {
+			float fps = ReadValue<int>(baseAddress + 0x25E34C);
+            regenTimer1 += 32.5f/fps;
+            if (regenTimer1 >= 150.0f) {
+				regenTimer2 += 32.5f / fps;
+                if (regenTimer2 >= 25.0f) {
+                    regenTimer2 = 0;
+					WriteValue<short>(tarf + 0xA0, ReadValue<short>(tarf + 0xA0) + 1);
+                }
+            }
+        }
+        else {
+            regenTimer1 = 0;
+			regenTimer2 = 0;
+        }
     }
 
     typedef int32_t(__fastcall* OrigFunc)(void*);
