@@ -95,6 +95,7 @@ public:
         int BlackOrbStatus = baseAddress + 0x25C8A6;
         int AdolMoveFuncPtr = baseAddress + 0x10B448;
 		int MagicCharge = baseAddress + 0x25CE14;
+		int TarfMagic = baseAddress + 0x25D380;
 
         WriteBytes(ResetSpeedCode, "\x90\x90\x90\x90\x90\x90\x90", 7); //Nop out speed reset
         WriteBytes(ResetAnimCode, "\x90\x90\x90\x90\x90\x90\x90", 7);
@@ -108,6 +109,7 @@ public:
 		*(int*)origMagicChargeBytes = MagicCharge;
 
         int adolLastHP = ReadValue<short>(AdolData + 0xA0);
+        int adolLastMP = ReadValue<short>(AdolData + 0xA8);
 
         while (true) {
             Sleep(10);
@@ -143,16 +145,19 @@ public:
                 WriteValue(TarfStats + 6, ReadValue<short>(adol + 0xB0)); //Copy Tarf's STR from Adol's STR
                 WriteValue(TarfStats + 8, ReadValue<short>(adol + 0xB4)); //Copy Tarf's DEF from Adol's DEF
                 if (ReadValue<short>(tarf + 0xAC) < ReadValue<short>(adol + 0xAC)) {
-                    WriteValue(tarf + 0xA0, ReadValue<short>(adol + 0xA0)); //Copy MP
-                    WriteValue(tarf + 0xA4, ReadValue<short>(adol + 0xA4)); //Copy MP
-                    WriteValue(tarf + 0xA8, ReadValue<short>(adol + 0xA8)); //Copy MP
-                    WriteValue(tarf + 0xAC, ReadValue<short>(adol + 0xAC)); //Copy MP
+					int readFrom = ReadValue<int>(TarfMagic + 0xC) == ReadValue<int>(adol + 0xAC) ? TarfMagic : adol + 0xA0;
+                    WriteValue(tarf + 0xA0, ReadValue<short>(readFrom)); //Copy MP
+                    WriteValue(tarf + 0xA4, ReadValue<short>(readFrom + 4)); //Copy MP
+                    WriteValue(tarf + 0xA8, ReadValue<short>(readFrom + 8)); //Copy MP
+                    WriteValue(tarf + 0xAC, ReadValue<short>(readFrom + 12)); //Copy MP
                 }
                 short curHP = ReadValue<short>(adol + 0xA0);
                 if (prevMaxHP < ReadValue<short>(TarfStats + 4))
                     WriteValue(tarf + 0xA0, ReadValue<short>(TarfStats + 4)); //If Tarf's max HP increased, heal him to full
                 if (curHP - adolLastHP > 2 && adolLastHP > 0)
                     WriteValue(tarf + 0xA0, ReadValue<short>(tarf + 0xA0) + curHP - adolLastHP);
+                if (ReadValue<short>(adol+0xA8) > adolLastMP && ReadValue<short>(adol + 0xA8) == ReadValue<short>(adol + 0xAC))
+					WriteValue(tarf + 0xA8, ReadValue<int>(tarf + 0xAC));
 
                 float verticalDir = (GetKeyState(UP) & 0x8000) ? 1.0f : ((GetKeyState(DOWN) & 0x8000) ? -1.0f : 0.0f);
                 float horizontalDir = (GetKeyState(RIGHT) & 0x8000) ? 1.0f : ((GetKeyState(LEFT) & 0x8000) ? -1.0f : 0.0f);
@@ -185,6 +190,7 @@ public:
             }
 
             adolLastHP = ReadValue<short>(adol + 0xA0);
+            adolLastMP = ReadValue<short>(adol + 0xA8);
 
             //float posX = ReadValue<float>(posXAddr, 2);
             //sprintf_s(buffer, "PosX: %.f", posX);
