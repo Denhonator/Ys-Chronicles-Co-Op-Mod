@@ -144,13 +144,12 @@ public:
                 WriteValue(TarfStats + 4, ReadValue<short>(adol + 0xA4)); //Copy Tarf's HP from Adol's HP
                 WriteValue(TarfStats + 6, ReadValue<short>(adol + 0xB0)); //Copy Tarf's STR from Adol's STR
                 WriteValue(TarfStats + 8, ReadValue<short>(adol + 0xB4)); //Copy Tarf's DEF from Adol's DEF
-                if (ReadValue<short>(tarf + 0xAC) < ReadValue<short>(adol + 0xAC)) {
+                if (ReadValue<short>(tarf + 0xAC) < ReadValue<short>(adol + 0xAC) && ReadValue<short>(tarf + 0x234) == 18) {
 					int readFrom = ReadValue<int>(TarfMagic + 0xC) == ReadValue<int>(adol + 0xAC) ? TarfMagic : adol + 0xA0;
-                    WriteValue(tarf + 0xA0, ReadValue<short>(readFrom)); //Copy MP
-                    WriteValue(tarf + 0xA4, ReadValue<short>(readFrom + 4)); //Copy MP
                     WriteValue(tarf + 0xA8, ReadValue<short>(readFrom + 8)); //Copy MP
                     WriteValue(tarf + 0xAC, ReadValue<short>(readFrom + 12)); //Copy MP
                 }
+                WriteValue(tarf + 0x234, ReadValue<short>(adol + 0x234)); //Copy spell
                 short curHP = ReadValue<short>(adol + 0xA0);
                 if (prevMaxHP < ReadValue<short>(TarfStats + 4))
                     WriteValue(tarf + 0xA0, ReadValue<short>(TarfStats + 4)); //If Tarf's max HP increased, heal him to full
