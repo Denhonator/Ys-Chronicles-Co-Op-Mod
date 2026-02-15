@@ -50,6 +50,7 @@ DWORD WINAPI HookThread(LPVOID) {
         newConfig << "Left = J\n";
         newConfig << "Right = L\n";
         newConfig << "Walk = U\n";
+        newConfig << "Action = H\n";
         newConfig << "MaxDistanceX = 400.0\n";
         newConfig << "MaxDistanceY = 250.0\n";
 
@@ -67,6 +68,7 @@ DWORD WINAPI HookThread(LPVOID) {
             else if (key.find("Left") != std::string::npos) LEFT = value[0];
             else if (key.find("Right") != std::string::npos) RIGHT = value[0];
             else if (key.find("Walk") != std::string::npos) WALK = value[0];
+            else if (key.find("Action") != std::string::npos) ACTION = value[0];
             else if (key.find("MaxDistanceX") != std::string::npos) maxDistanceX = std::stof(value);
             else if (key.find("MaxDistanceY") != std::string::npos) maxDistanceY = std::stof(value);
         }
