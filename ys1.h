@@ -68,6 +68,12 @@ void __fastcall Ys1DamageHook(uint32_t arg1) {
         "\x25\x00\x00\x00\x02\x00\x00\x00\x14\x00\x00\x00\xE1\xFF\xFF\xFF\x00\x00\x00\x00\x20\x20\x20\x20\x20\x20\x50\x31\x00\x00\x00\x00" :
         "\x15\x00\x00\x00\x02\x00\x00\x00\x14\x00\x00\x00\xE1\xFF\xFF\xFF\x00\x00\x00\x00\x20\x20\x20\x20\x20\x20\x50\x32\x00\x00\x00\x00", 32); //Enable player text
 
+    if ((int)arg1 != adol)
+        WriteBytes(baseAddress + 0x1DE4F, "\x1C\x18", 2);
+
+    else if ((int)arg1 == adol)
+        WriteBytes(baseAddress + 0x1DE4F, "\xFC\x17", 2);
+
     typedef void(__fastcall* OrigFunc)(uint32_t);
     void* originalFunc = (void*)(baseAddress + 0x1C1D0);
     ((OrigFunc)originalFunc)(arg1);
@@ -113,7 +119,7 @@ void __fastcall Ys1DamageHook(uint32_t arg1) {
 void DamageRedirect(int16_t arg1, float arg2) {
     int ediVal = 0;
     __asm {
-		mov ediVal, edi
+        mov ediVal, edi
     }
 
     typedef void(*OrigFunc)(int16_t, float);
@@ -209,7 +215,8 @@ public:
                     WriteValue(feena + 0x180, ReadValue<short>(feena + 0x180) + curHP - adolLastHP);
                 //WriteValue(FeenaHP, ReadValue<short>(feena + 0x180)); //Sync visual HP with actual HP
 
-                if (ReadValue<int>(feena + 0x18) == 0 && ReadValue<int>(feena + 0x20) == 0 && ReadValue<char>(AdolHP+0x29C) && ReadValue<int>(FeenaHP) < ReadValue<int>(FeenaHP+4) && !ReadValue<char>(pause+0x34)) {
+                if (ReadValue<int>(feena + 0x18) == 0 && ReadValue<int>(feena + 0x20) == 0 && ReadValue<char>(AdolHP+0x29C) 
+                    && !ReadValue<char>(AdolHP + 0x298) && ReadValue<int>(FeenaHP) < ReadValue<int>(FeenaHP+4) && !ReadValue<char>(pause+0x34)) {
                     //If Feena is not moving
                     feenaRegenTimer += 10;
                     if (feenaRegenTimer >= 315 - (ReadValue<int>(FeenaHP+4) * 85) / 100) {
