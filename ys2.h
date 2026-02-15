@@ -2,7 +2,11 @@
 #include "Game.h"
 
 int tarf = 0;
-char magicHold = 0;
+char magicInput[11] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+bool prevMagic = false;
+float magicCharge = 0;
+char magicChargeAddr[4];
+char origMagicChargeBytes[4];
 
 int32_t __fastcall AdolMoveHook(void* arg1) {
     int Input = baseAddress + 0x25E398;
@@ -32,14 +36,35 @@ int32_t __fastcall AdolMoveHook(void* arg1) {
   //  }
 
     if ((int)arg1 == tarf) {
+		int MPCharge = baseAddress + 0x25D3AC;
 		bool isDown = GetKeyState(ACTION) & 0x8000;
-        char* input = new char[11] {1, 1, 1, 1, 1, 1, 1, 1, 1, magicHold, isDown};
+		magicInput[9] = isDown && !prevMagic;
+		magicInput[10] = isDown ? 1 : 0;
+
+
+        WriteBytes(baseAddress + 0x1CBFC + 4, magicChargeAddr, 4);
+        WriteBytes(baseAddress + 0x1CC0B + 4, magicChargeAddr, 4);
+        WriteBytes(baseAddress + 0x1CC15 + 2, magicChargeAddr, 4);
+        WriteBytes(baseAddress + 0x1CC38 + 4, magicChargeAddr, 4);
+        WriteBytes(baseAddress + 0x1CC51 + 2, magicChargeAddr, 4);
+        WriteBytes(baseAddress + 0x1CC6C + 2, magicChargeAddr, 4);
+        WriteBytes(baseAddress + 0x1B9B6 + 4, magicChargeAddr, 4);
+        WriteBytes(baseAddress + 0x1C513 + 4, magicChargeAddr, 4);
 
         typedef void*** (__fastcall* FireBall)(void*, void*, void*);
         void* fireballFunc = (void*)(baseAddress + 0x1CBC0);
-        void*** ret = ((FireBall)fireballFunc)(arg1, arg1, input);
+        void*** ret = ((FireBall)fireballFunc)(arg1, arg1, magicInput);
 
-		magicHold = isDown ? 1 : 0;
+        WriteBytes(baseAddress + 0x1CBFC + 4, origMagicChargeBytes, 4);
+        WriteBytes(baseAddress + 0x1CC0B + 4, origMagicChargeBytes, 4);
+        WriteBytes(baseAddress + 0x1CC15 + 2, origMagicChargeBytes, 4);
+        WriteBytes(baseAddress + 0x1CC38 + 4, origMagicChargeBytes, 4);
+        WriteBytes(baseAddress + 0x1CC51 + 2, origMagicChargeBytes, 4);
+        WriteBytes(baseAddress + 0x1CC6C + 2, origMagicChargeBytes, 4);
+        WriteBytes(baseAddress + 0x1B9B6 + 4, origMagicChargeBytes, 4);
+        WriteBytes(baseAddress + 0x1C513 + 4, origMagicChargeBytes, 4);
+
+		prevMagic = isDown;
     }
 
     typedef int32_t(__fastcall* OrigFunc)(void*);
@@ -69,6 +94,7 @@ public:
         int cam = baseAddress + 0x25D6D0;
         int BlackOrbStatus = baseAddress + 0x25C8A6;
         int AdolMoveFuncPtr = baseAddress + 0x10B448;
+		int MagicCharge = baseAddress + 0x25CE14;
 
         WriteBytes(ResetSpeedCode, "\x90\x90\x90\x90\x90\x90\x90", 7); //Nop out speed reset
         WriteBytes(ResetAnimCode, "\x90\x90\x90\x90\x90\x90\x90", 7);
@@ -77,6 +103,9 @@ public:
         char bytes[4];
         *(int*)bytes = (int)AdolMoveHook;
 		WriteBytes(AdolMoveFuncPtr, bytes, 4);
+
+		*(int*)magicChargeAddr = (int)(&magicCharge);
+		*(int*)origMagicChargeBytes = MagicCharge;
 
         int adolLastHP = ReadValue<short>(AdolData + 0xA0);
 
