@@ -16,8 +16,6 @@ Adol's sprite is also used for P2 because it has all the necessary animation fra
 
 Players can be distinguished from one another by text above their heads that says P1 or P2 in different colors.
 
-It is recommended to keep the stat display up to see both players' HP.
-
 ## Ys 2
 The other player is spawned by setting the flags for Tarf to be following Adol, then changing the properties of Tarf. He uses Adol's Roo sprite because it has all the necessary animation frames. This way the players look significantly different. When Adol transforms, P2 will blink, so you can still distinguish them.
 
@@ -25,7 +23,7 @@ He will not spawn in Lava Colony until you do his quest to the point where you g
 
 If P2 is not spawned in, try changing rooms.
 
-P2 cannot use magic, which limits options in certain fights. I may try to implement it later.
+P1 and P2 can both use fire magic if it is equipped. MP charge is shared, but total MP is separate.
 
 ## Work in progress
 Currently Steam version is supported. I will check and fix GOG version once I have tested and solved other potential issues.
@@ -34,7 +32,6 @@ Only a limited amount of testing has been done so far. There are probably bugs t
 
 Other possible additions for future (not necessarily planned but could be worthwhile additions): 
 - Adaptive / split / wider camera. This would be really nice, but currently at best I could probably get it to center on the average between players, and I don't know how useful that would even be.
-- P2 magic in Ys 2
 - Make enemies actually target P2 in Ys 1
 - Improved HUD for P2
 - Balancing options. Could be good to increase boss HP or make it more forgiving so one player's fun isn't ruined by the other player dying.
