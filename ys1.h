@@ -68,11 +68,11 @@ void __fastcall Ys1DamageHook(uint32_t arg1) {
         "\x25\x00\x00\x00\x02\x00\x00\x00\x14\x00\x00\x00\xE1\xFF\xFF\xFF\x00\x00\x00\x00\x20\x20\x20\x20\x20\x20\x50\x31\x00\x00\x00\x00" :
         "\x15\x00\x00\x00\x02\x00\x00\x00\x14\x00\x00\x00\xE1\xFF\xFF\xFF\x00\x00\x00\x00\x20\x20\x20\x20\x20\x20\x50\x32\x00\x00\x00\x00", 32); //Enable player text
 
-    if ((int)arg1 != adol)
-        WriteBytes(baseAddress + 0x1DE4F, "\x1C\x18", 2);
 
-    else if ((int)arg1 == adol)
-        WriteBytes(baseAddress + 0x1DE4F, "\xFC\x17", 2);
+    WriteBytes(baseAddress + 0x1DE4F, (int)arg1 == adol ? "\xFC\x17" : "\x1C\x18", 2);  //Damage code
+    char bytes[4];
+    *(int*)bytes = (int)arg1;
+    WriteBytes(baseAddress + 0x1D769, bytes, 4);    //Knockback code
 
     typedef void(__fastcall* OrigFunc)(uint32_t);
     void* originalFunc = (void*)(baseAddress + 0x1C1D0);
@@ -151,12 +151,14 @@ public:
             cam = baseAddress + 0x127DFC,
             pause = baseAddress + 0x131518,
             CanMove = baseAddress + 0xF906C,
+            EquippedRing = baseAddress + 0x131680,
             FeenaMoveFuncPointer = baseAddress + 0xDB140,
             AdolMoveFuncPointer = baseAddress + 0xDAE30,
             DamageRedirectCall = baseAddress + 0x1C4D7,
             FeenaStatShowCode = baseAddress + 0x9F10D,
             FeenaHPBarCode = baseAddress + 0x56C46,
             FeenaHPBarCode2 = baseAddress + 0x5525E,
+            KnockbackCode = baseAddress + 0x1D768,
             BatAttackCode = baseAddress + 0x2606C;
 
         //WriteBytes(FeenaRoomCheckCode, "\x90\x90", 2);
@@ -164,6 +166,7 @@ public:
         WriteBytes(FeenaHPBarCode, "\x90\x90", 2);
         WriteBytes(FeenaHPBarCode2, "\x90\x90", 2);
         WriteBytes(BatAttackCode, "\xEB", 1);
+        WriteBytes(KnockbackCode, "\xBE\x01\x01\x01\x01\x90", 6);
 
         char bytes[4];
         *(int*)bytes = (int)Ys1MovementHook;
@@ -205,14 +208,17 @@ public:
                 short curHP = ReadValue<short>(adol + 0x180);
                 if (prevMaxHP < ReadValue<short>(FeenaHP + 4))
                     WriteValue(feena + 0x180, ReadValue<short>(FeenaHP + 4)); //If Feena's max HP increased, heal her to full
-                if (curHP - adolLastHP > 5 && adolLastHP > 0)
+                if (curHP - adolLastHP > 1 && adolLastHP > 0)
                     WriteValue(feena + 0x180, ReadValue<short>(feena + 0x180) + curHP - adolLastHP);
                 //WriteValue(FeenaHP, ReadValue<short>(feena + 0x180)); //Sync visual HP with actual HP
 
-                if (ReadValue<int>(feena + 0x18) == 0 && ReadValue<int>(feena + 0x20) == 0 && ReadValue<char>(AdolHP+0x29C) 
-                    && !ReadValue<char>(AdolHP + 0x298) && ReadValue<int>(FeenaHP) < ReadValue<int>(FeenaHP+4) && !ReadValue<char>(pause+0x34)) {
-                    //If Feena is not moving
-                    feenaRegenTimer += 10;
+                if (ReadValue<int>(feena + 0x18) == 0 && ReadValue<int>(feena + 0x20) == 0 && ReadValue<int>(FeenaHP) > 0
+                     && ReadValue<int>(FeenaHP) < ReadValue<int>(FeenaHP+4) && !ReadValue<char>(pause+0x34)) {
+                    
+                    int canHeal = ReadValue<char>(AdolHP + 0x29C) && !ReadValue<char>(AdolHP + 0x298) ? 10 : 0;
+                    canHeal += ReadValue<int>(EquippedRing) == 18 ? 5 : 0;
+
+                    feenaRegenTimer += canHeal;
                     if (feenaRegenTimer >= 315 - (ReadValue<int>(FeenaHP+4) * 85) / 100) {
                         WriteValue<short>(FeenaHP, ReadValue<short>(FeenaHP) + 1);
                         feenaRegenTimer = 0;
