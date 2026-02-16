@@ -18,7 +18,6 @@ Players can be distinguished from one another by text above their heads that say
 
 Known issues:
 -P2 Sword animation may appear at wrong locations
--Tree and Reah FMVs end abruptly
 -Sometimes P1 dies unexpectedly / HP bar shows someone else's HP
 -Light in cave gets attached to P2 when loading
 
