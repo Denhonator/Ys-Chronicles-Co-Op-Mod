@@ -145,24 +145,25 @@ public:
             AdolHP = baseAddress + 0x1317FC,
             FeenaHP = AdolHP + 0x20,
             FeenaRoomCheckCode = baseAddress + 0x351A2,
-            CanMove = baseAddress + 0x135884,
             AdolRoom = baseAddress + 0x11E494,
             FeenaRoom = baseAddress + 0x13169C,
             NextRoom = baseAddress + 0x131554,
             cam = baseAddress + 0x127DFC,
             pause = baseAddress + 0x131518,
+            CanMove = baseAddress + 0xF906C,
             FeenaMoveFuncPointer = baseAddress + 0xDB140,
             AdolMoveFuncPointer = baseAddress + 0xDAE30,
             DamageRedirectCall = baseAddress + 0x1C4D7,
             FeenaStatShowCode = baseAddress + 0x9F10D,
             FeenaHPBarCode = baseAddress + 0x56C46,
-            FeenaHPBarCode2 = baseAddress + 0x5525E;
-
+            FeenaHPBarCode2 = baseAddress + 0x5525E,
+            BatAttackCode = baseAddress + 0x2606C;
 
         //WriteBytes(FeenaRoomCheckCode, "\x90\x90", 2);
         WriteBytes(FeenaStatShowCode, "\x90\x90\x90\x90\x90\x90", 6);
         WriteBytes(FeenaHPBarCode, "\x90\x90", 2);
         WriteBytes(FeenaHPBarCode2, "\x90\x90", 2);
+        WriteBytes(BatAttackCode, "\xEB", 1);
 
         char bytes[4];
         *(int*)bytes = (int)Ys1MovementHook;
@@ -186,13 +187,6 @@ public:
 
             int nextRoom = ReadValue<int>(NextRoom);
             //allowFeena = ReadValue<int>(NextRoom) != 36;
-
-            //if (nextRoom > 1 && adol > baseAddress) {
-            //    WriteValue(FeenaRoom, nextRoom); //Keep Feena in the same room as Adol
-            //    WriteValue<char>(FeenaActive, allowFeena ? 1 : 0); //Keep Feena active
-            //}
-
-			//WriteValue<int>(FeenaActive, nextRoom == 0 ? 1 : 0);
 
             if (nextRoom == 0 && ReadValue<int>(feena) == 0x4DAE1C) {
 				WriteValue<int>(FeenaActive+0x20, 1);   //HP bar
@@ -237,29 +231,11 @@ public:
                     WriteValue<char>(adol + 0x19C, 1);
                 }
 
-                //        int verticalDir = (GetKeyState(UP) & 0x8000) ? 1 : ((GetKeyState(DOWN) & 0x8000) ? -1 : 0);
-                //        int horizontalDir = (GetKeyState(RIGHT) & 0x8000) ? 1 : ((GetKeyState(LEFT) & 0x8000) ? -1 : 0);
-                //        int speed = GetKeyState(WALK) & 0x8000 ? 640 : 1152;
-
-                //        if ((verticalDir != 0 || horizontalDir != 0)) {
-                //            int rotation = 0;
-                //            if (verticalDir > 0)
-                //                rotation = 64 - horizontalDir * 32;
-                //            else if (verticalDir < 0)
-                //                rotation = 192 + horizontalDir * 32;
-                //            else
-                //                rotation = horizontalDir < 0 ? 128 : 0;
-
-                //            WriteValue(feena + 0x14, rotation);
-                //            WriteValue(feena + 0x18, speed);
-                //        }
-                //        else
-                            //WriteValue(feena + 0x18, 0);
-
-
+                //16:9 mode: 240, 136
                 int camCenterX = ReadValue<int>(cam) + 296;
                 int camCenterY = ReadValue<int>(cam + 4) + 192;
-                if (std::abs(ReadValue<int>(feena + 0x24) - camCenterX) > maxDistanceX
+                if (!ReadValue<char>(CanMove) || (ReadValue<int>(AdolRoom) == 36 && ReadValue<int>(FeenaActive))
+                    || std::abs(ReadValue<int>(feena + 0x24) - camCenterX) > maxDistanceX
                     || std::abs(ReadValue<int>(feena + 0x28) - camCenterY) > maxDistanceY) {
                     WriteValue(feena + 0x24, ReadValue<int>(adol + 0x24));
                     WriteValue(feena + 0x28, ReadValue<int>(adol + 0x28));
