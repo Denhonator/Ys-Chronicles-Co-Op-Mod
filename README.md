@@ -18,16 +18,9 @@ Players can be distinguished from one another by text above their heads that say
 
 Known issues:
 -P2 Sword animation may appear at wrong locations
--Crash sometimes on room transition, especially when exiting shrine or immediately after loading a save
--Bosses knockback P1 when P2 attacks
--Bat boss randomly refers to either P1 or P2 HP on hit
--Feena gets stuck on P2 when bringing her back to town
 -Tree and Reah FMVs end abruptly
 -Sometimes P1 dies unexpectedly / HP bar shows someone else's HP
 -Light in cave gets attached to P2 when loading
--Regen Ring and after-boss recovery doesn't apply to P2
--You can save and load to save P2 from dying
--Sometimes P2 ends up out of bounds when changing rooms
 
 ## Ys 2
 The other player is spawned by setting the flags for Tarf to be following Adol, then changing the properties of Tarf. He uses Adol's Roo sprite because it has all the necessary animation frames. This way the players look significantly different. When Adol transforms, P2 will blink, so you can still distinguish them.
