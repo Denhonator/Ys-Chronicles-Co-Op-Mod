@@ -30,7 +30,7 @@ void __fastcall Ys1MovementHook(void* arg1) {
         int speed = GetKeyState(WALK) & 0x8000 ? 640 : 1152;
 
         WriteValue(Running, (verticalDir != 0 || horizontalDir != 0) && speed > 640 ? 1 : 0);
-        WriteValue(AdolInput + 0x31, (verticalDir != 0 || horizontalDir != 0) ? 1 : 0);
+        WriteValue<char>(AdolInput + 0x31, (verticalDir != 0 || horizontalDir != 0) ? 1 : 0);
         WriteValue(AdolInput, horizontalDir > 0 ? 2 : horizontalDir < 0 ? 1 : 0);
         if ((verticalDir != 0 || horizontalDir != 0)) {
             WriteValue(AdolInput + 0x40, horizontalDir > 0 ? 6 : horizontalDir < 0 ? 5 : verticalDir < 0 ? 4 : verticalDir > 0 ? 3 : 0);
@@ -58,7 +58,7 @@ void __fastcall Ys1MovementHook(void* arg1) {
     ((OrigFunc)originalFunc)(arg1);
 
     if ((int)arg1 != feena) {
-        if (feenaSpawned) {
+        if (feenaSpawned && feena >= baseAddress) {
             camTarget.x = (ReadValue<int>((int)arg1 + 0x24) + ReadValue<int>(feena + 0x24)) / 2;
             camTarget.y = (ReadValue<int>((int)arg1 + 0x28) + ReadValue<int>(feena + 0x28)) / 2;
         }
@@ -113,14 +113,17 @@ void __fastcall Ys1DamageHook(uint32_t arg1) {
             feena += 0x480;
         }
 
-        if (ReadValue<int>(FeenaData) < baseAddress && ReadValue<int>(baseAddress+0x1313B0) > 0) {
+        if (ReadValue<int>(baseAddress + 0x1313B0) <= 0 && ReadValue<int>(FeenaData) < baseAddress)
+            feena = 0;
+
+        else if (ReadValue<int>(FeenaData) < baseAddress) {
             int FeenaRoom = baseAddress + 0x13169C;
-			int FeenaActive = baseAddress + 0x131C44;
-			int AdolRoom = baseAddress + 0x11E494;
-			int prevRoom = ReadValue<int>(FeenaRoom);
-			int prevActive = ReadValue<char>(FeenaActive);
-			WriteValue<int>(FeenaRoom, ReadValue<int>(AdolRoom));
-			WriteValue<char>(FeenaActive, 1);
+            int FeenaActive = baseAddress + 0x131C44;
+            int AdolRoom = baseAddress + 0x11E494;
+            int prevRoom = ReadValue<int>(FeenaRoom);
+            int prevActive = ReadValue<char>(FeenaActive);
+            WriteValue<int>(FeenaRoom, ReadValue<int>(AdolRoom));
+            WriteValue<char>(FeenaActive, 1);
 
             typedef int32_t(*AllocateCharacter)();
             AllocateCharacter funcPtr = reinterpret_cast<AllocateCharacter>((void*)(baseAddress + 0x8C870));
@@ -128,21 +131,21 @@ void __fastcall Ys1DamageHook(uint32_t arg1) {
             feena = ReadValue<int>(FeenaData);
 
             if (result && feena >= baseAddress) {
-				WriteBytes(feena, feenaSample, 0x480);
+                WriteBytes(feena, feenaSample, 0x480);
                 int slot1 = ReadValue<int>(AdolData + 4);
                 WriteValue<int>(FeenaData, slot1);
-                WriteValue<int>(AdolData+4, feena);
+                WriteValue<int>(AdolData + 4, feena);
                 WriteValue(feena + 0x24, ReadValue<int>(adol + 0x24));
                 WriteValue(feena + 0x28, ReadValue<int>(adol + 0x28));
             }
             else {
-				OutputDebugStringA("Failed to spawn P2!");
+                OutputDebugStringA("Failed to spawn P2!");
             }
-			WriteValue<int>(FeenaRoom, prevRoom);
-			WriteValue<char>(FeenaActive, prevActive);
+            WriteValue<int>(FeenaRoom, prevRoom);
+            WriteValue<char>(FeenaActive, prevActive);
         }
     }
-    else
+    else if (feena >= baseAddress)
         feenaSpawned = true;
 }
 
@@ -176,7 +179,7 @@ void TowerLoop() {
     ((OrigFunc)originalFunc)();
 
     int xjump = ReadValue<int>(adol + 0x24) - lastAdolX;
-    if (std::abs(xjump) > 200 && feenaSpawned) {
+    if (std::abs(xjump) > 200 && feenaSpawned && feena >= baseAddress) {
         int newx = ReadValue<int>(feena + 0x24) + xjump;
         WriteValue(feena + 0x24, newx);
         WriteValue(feena + 0x30, newx * (int)std::pow(2, 16));
@@ -255,7 +258,7 @@ public:
             if (nextRoom > 0)
                 feenaSpawned = false;
 
-            if (nextRoom == 0 && feenaSpawned) {
+            if (nextRoom == 0 && feenaSpawned && feena >= baseAddress) {
 				WriteValue<int>(FeenaActive+0x20, 1);   //HP bar
                 //WriteValue(feena, 0x4DAE1C);
                 WriteValue<char>(feena + 0x250, ReadValue<char>(adol + 0x250));
