@@ -102,7 +102,7 @@ void __fastcall Ys1DamageHook(uint32_t arg1) {
             feena += 0x480;
         }
 
-        if (ReadValue<int>(FeenaData) < baseAddress && ReadValue<int>(baseAddress+0x1313B0) > 10) {
+        if (ReadValue<int>(FeenaData) < baseAddress && ReadValue<int>(baseAddress+0x1313B0) > 0) {
             int FeenaRoom = baseAddress + 0x13169C;
 			int FeenaActive = baseAddress + 0x131C44;
 			int AdolRoom = baseAddress + 0x11E494;
@@ -118,6 +118,11 @@ void __fastcall Ys1DamageHook(uint32_t arg1) {
 
             if (result && feena >= baseAddress) {
 				WriteBytes(feena, feenaSample, 0x480);
+                int slot1 = ReadValue<int>(AdolData + 4);
+                WriteValue<int>(FeenaData, slot1);
+                WriteValue<int>(AdolData+4, feena);
+                WriteValue(feena + 0x24, ReadValue<int>(adol + 0x24));
+                WriteValue(feena + 0x28, ReadValue<int>(adol + 0x28));
             }
             else {
 				OutputDebugStringA("Failed to spawn P2!");
@@ -126,6 +131,8 @@ void __fastcall Ys1DamageHook(uint32_t arg1) {
 			WriteValue<char>(FeenaActive, prevActive);
         }
     }
+    else
+        feenaSpawned = true;
 }
 
 void DamageRedirect(int16_t arg1, float arg2) {
@@ -210,7 +217,10 @@ public:
             int nextRoom = ReadValue<int>(NextRoom);
             //allowFeena = ReadValue<int>(NextRoom) != 36;
 
-            if (nextRoom == 0 && ReadValue<int>(feena) == 0x4DAE1C) {
+            if (nextRoom > 0)
+                feenaSpawned = false;
+
+            if (nextRoom == 0 && feenaSpawned) {
 				WriteValue<int>(FeenaActive+0x20, 1);   //HP bar
                 //WriteValue(feena, 0x4DAE1C);
                 WriteValue<char>(feena + 0x250, ReadValue<char>(adol + 0x250));
@@ -259,13 +269,17 @@ public:
                 //16:9 mode: 240, 136
                 int camCenterX = ReadValue<int>(cam) + ReadValue<int>(CamOffset + 0xC) / 2;
                 int camCenterY = ReadValue<int>(cam + 4) + ReadValue<int>(CamOffset + 0x10) / 2;
-                if (!ReadValue<char>(CanMove) || (ReadValue<int>(AdolRoom) == 36 && ReadValue<int>(FeenaActive)) || ReadValue<int>(FadeOut) < 50
+                if (!ReadValue<char>(CanMove) || (ReadValue<int>(AdolRoom) == 36 && ReadValue<int>(FeenaActive)) 
                     || std::abs(ReadValue<int>(feena + 0x24) - camCenterX) > maxDistanceX
                     || std::abs(ReadValue<int>(feena + 0x28) - camCenterY) > maxDistanceY) {
                     WriteValue(feena + 0x24, ReadValue<int>(adol + 0x24));
                     WriteValue(feena + 0x28, ReadValue<int>(adol + 0x28));
                 }
             }
+            //else {
+            //    camTarget.x = ReadValue<int>(adol + 0x24);
+            //    camTarget.y = ReadValue<int>(adol + 0x28);
+            //}
 
             adolLastHP = ReadValue<short>(adol + 0x180);
         }
