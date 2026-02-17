@@ -19,7 +19,7 @@ void __fastcall Ys1MovementHook(void* arg1) {
         AdolInput = baseAddress + 0x14BC18;
 
     int prevRunning = ReadValue<char>(Running);
-    int prevMoving = ReadValue<char>(AdolInput + 0x31);
+    char prevMoving = ReadValue<char>(AdolInput + 0x31);
     int prevDirection = ReadValue<char>(AdolInput + 0x40);
     int prevRotation = ReadValue<char>(AdolInput + 0x38);
     int prevHorizontal = ReadValue<char>(AdolInput);
@@ -47,6 +47,11 @@ void __fastcall Ys1MovementHook(void* arg1) {
             WriteValue(AdolInput + 0x28, ReadValue<int>(AdolInput + 0x28) + 16);
         }
     }
+    else if (GetKeyState('P') & 0x8000) {
+        typedef int32_t(*OrigFunc)();
+        void* originalFunc = (void*)(baseAddress + 0xA58E0);
+        ((OrigFunc)originalFunc)();
+    }
     
     typedef void(__fastcall* OrigFunc)(void*);
     void* originalFunc = (void*)(baseAddress + 0x1B550);
@@ -64,7 +69,7 @@ void __fastcall Ys1MovementHook(void* arg1) {
     }
 
     WriteValue(Running, prevRunning);
-    WriteValue(AdolInput + 0x31, prevMoving);
+    WriteValue<char>(AdolInput + 0x31, prevMoving);
     WriteValue(AdolInput + 0x40, prevDirection);
     WriteValue(AdolInput + 0x38, prevRotation);
     WriteValue(AdolInput, prevHorizontal);
