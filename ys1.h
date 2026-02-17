@@ -53,8 +53,14 @@ void __fastcall Ys1MovementHook(void* arg1) {
     ((OrigFunc)originalFunc)(arg1);
 
     if ((int)arg1 != feena) {
-        camTarget.x = (ReadValue<int>((int)arg1 + 0x24) + ReadValue<int>(feena + 0x24)) / 2;
-        camTarget.y = (ReadValue<int>((int)arg1 + 0x28) + ReadValue<int>(feena + 0x28)) / 2;
+        if (feenaSpawned) {
+            camTarget.x = (ReadValue<int>((int)arg1 + 0x24) + ReadValue<int>(feena + 0x24)) / 2;
+            camTarget.y = (ReadValue<int>((int)arg1 + 0x28) + ReadValue<int>(feena + 0x28)) / 2;
+        }
+        else {
+            camTarget.x = ReadValue<int>((int)arg1 + 0x24);
+            camTarget.y = ReadValue<int>((int)arg1 + 0x28);
+        }
     }
 
     WriteValue(Running, prevRunning);
@@ -155,6 +161,26 @@ void DamageRedirect(int16_t arg1, float arg2) {
         WriteBytes(baseAddress + 0x1CF01, "\xFC\x17", 2);
 }
 
+void TowerLoop() {
+    int AdolData = baseAddress + 0x14061C;
+    int adol = ReadValue<int>(AdolData);
+    int lastAdolX = ReadValue<int>(adol + 0x24);
+
+    typedef void(*OrigFunc)();
+    void* originalFunc = (void*)(baseAddress + 0x98650);
+    ((OrigFunc)originalFunc)();
+
+    int xjump = ReadValue<int>(adol + 0x24) - lastAdolX;
+    if (std::abs(xjump) > 200 && feenaSpawned) {
+        int newx = ReadValue<int>(feena + 0x24) + xjump;
+        WriteValue(feena + 0x24, newx);
+        WriteValue(feena + 0x30, newx * (int)std::pow(2, 16));
+    }
+
+    camTarget.x = ReadValue<int>(adol + 0x24);
+    camTarget.y = ReadValue<int>(adol + 0x28);
+}
+
 class ys1 : public Game
 {
 public:
@@ -181,6 +207,7 @@ public:
             FeenaHPBarCode2 = baseAddress + 0x5525E,
             KnockbackCode = baseAddress + 0x1D768,
             CamDummyCode = baseAddress + 0x8BE21,
+            TowerLoopCode = baseAddress + 0x77D06,
             BatAttackCode = baseAddress + 0x2606C;
 
         //WriteBytes(FeenaRoomCheckCode, "\x90\x90", 2);
@@ -198,6 +225,9 @@ public:
 
 		*(int*)bytes = (int)DamageRedirect - 5 - DamageRedirectCall;
         WriteBytes(DamageRedirectCall + 1, bytes, 4);
+
+        *(int*)bytes = (int)TowerLoop - 5 - TowerLoopCode;
+        WriteBytes(TowerLoopCode + 1, bytes, 4);
 
         *(int*)bytes = (int)&camTarget;
         WriteBytes(CamDummyCode, bytes, 4);
@@ -235,16 +265,16 @@ public:
                 WriteValue(feena + 0x188, ReadValue<short>(FeenaHP + 8));
                 WriteValue(feena + 0x18C, ReadValue<short>(FeenaHP + 0xC));
                 short curHP = ReadValue<short>(adol + 0x180);
+                int canHeal = ReadValue<char>(AdolHP + 0x29C) && !ReadValue<char>(AdolHP + 0x298) ? 10 : 0;
                 if (prevMaxHP < ReadValue<short>(FeenaHP + 4))
                     WriteValue(feena + 0x180, ReadValue<short>(FeenaHP + 4)); //If Feena's max HP increased, heal her to full
-                if (curHP - adolLastHP > 1 && adolLastHP > 0)
+                if (curHP - adolLastHP > canHeal && adolLastHP > 0)
                     WriteValue(feena + 0x180, ReadValue<short>(feena + 0x180) + curHP - adolLastHP);
                 //WriteValue(FeenaHP, ReadValue<short>(feena + 0x180)); //Sync visual HP with actual HP
 
                 if (ReadValue<int>(feena + 0x18) == 0 && ReadValue<int>(feena + 0x20) == 0 && ReadValue<int>(FeenaHP) > 0
                      && ReadValue<int>(FeenaHP) < ReadValue<int>(FeenaHP+4) && !ReadValue<char>(pause+0x34)) {
                     
-                    int canHeal = ReadValue<char>(AdolHP + 0x29C) && !ReadValue<char>(AdolHP + 0x298) ? 10 : 0;
                     canHeal += ReadValue<int>(EquippedRing) == 18 ? 5 : 0;
 
                     feenaRegenTimer += canHeal;

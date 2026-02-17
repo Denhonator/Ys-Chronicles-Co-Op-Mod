@@ -17,7 +17,6 @@ Adol's sprite is also used for P2 because it has all the necessary animation fra
 Players can be distinguished from one another by text above their heads that says P1 or P2 in different colors.
 
 Known issues:
--P2 Sword animation may appear at wrong locations
 -Sometimes P1 dies unexpectedly / HP bar shows someone else's HP
 -Light in cave gets attached to P2 when loading
 
