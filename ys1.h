@@ -47,9 +47,11 @@ void __fastcall Ys1MovementHook(void* arg1) {
             WriteValue(AdolInput + 0x28, ReadValue<int>(AdolInput + 0x28) + 16);
         }
     }
-    else if (GetKeyState('P') & 0x8000) {
+    else if (GetKeyState(SAVE) & 0x8000) {
         typedef int32_t(*OrigFunc)();
-        void* originalFunc = (void*)(baseAddress + 0xA58E0);
+        void* originalFunc = (void*)(baseAddress + 0xA67F0);    //Preview img
+        ((OrigFunc)originalFunc)();
+        originalFunc = (void*)(baseAddress + 0xA58E0);      //Game data save
         ((OrigFunc)originalFunc)();
     }
     
