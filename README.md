@@ -35,8 +35,6 @@ Currently Steam version is supported. I will check and fix GOG version once I ha
 Only a limited amount of testing has been done so far. There are probably bugs to fix when going through the entirity of both games.
 
 Other possible additions for future (not necessarily planned but could be worthwhile additions): 
-- Adaptive / split / wider camera. This would be really nice, but currently at best I could probably get it to center on the average between players, and I don't know how useful that would even be.
-- Auto- / Quicksave. Menuing saves in co-op can be inconvenient.
 - Make enemies actually target P2 in Ys 1
 - Improved HUD for P2
 - Balancing options. Could be good to increase boss HP (Ys 2) or make it more forgiving so one player's fun isn't ruined by the other player dying.
