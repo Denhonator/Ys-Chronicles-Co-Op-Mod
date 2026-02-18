@@ -2,10 +2,10 @@
 #include "Game.h"
 
 int feena = 0;
-bool allowFeena = true;
-int feenaQuest = false;
 bool feenaSpawned = false;
 int savedTimer = 0;
+bool justSpawned = false;
+int mapScript = 0;
 const char* feenaSample = "\x1C\xAE\x4D\x00\x01\x00\x00\x00\x80\x05\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\xD3\x00\x00\x00\x00\x00\x00\x00\x40\x00\x00\x00\x00\x00\x00\x00\x0C\x05\x00\x00\x80\x05\x00\x00\x00\x00\x00\x00\x6A\xB7\x0C\x05\xE4\xC2\x80\x05\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x14\x59\xEB\x0A\x01\x00\x00\x00\x00\x00\x00\x00\x0C\x00\x00\x00\x00\x00\x00\x00\x4E\x00\x00\x00\x04\x00\x00\x00\x00\x00\x20\x41\x97\xFF\x1F\x41\x01\x00\x00\x00\xA0\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x0F\x00\x00\x00\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x0B\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xF0\xFF\xFF\xFF\xF8\xFF\xFF\xFF\x0F\x00\x00\x00\x07\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x64\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x11\x00\x00\x00\x11\x00\x00\x00\x07\x00\x00\x00\x07\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x30\x05\x00\x00\x20\x05\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x0C\x05\x00\x00\x80\x05\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x0B\x00\x00\x00\xFF\xFF\xFF\xFF\x09\x00\x00\x00\x07\x00\x00\x00\xEC\xFD\xF7\x44\x00\x00\x00\x00\x00\x00\x00\x00\x11\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xC0\x40\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xFF\xFF\xFF\x80\x01\x00\x00\xC0\x00\x00\x00\x40\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xFF\xFF\xFF\x00\x00\x00\x00\xD4\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
 struct CamDummy {
     CamDummy* self;
@@ -14,6 +14,45 @@ struct CamDummy {
     int32_t y = 0;
 };
 CamDummy camTarget;
+
+int32_t MapScriptHook() {
+    int adol = ReadValue<int>(baseAddress + 0x14061C);
+
+    int lastAdolX = 0;
+    if (adol >= baseAddress)
+        lastAdolX = ReadValue<int>(adol + 0x24);
+
+    typedef int32_t(*OrigFunc)();
+    void* originalFunc = (void*)(mapScript);
+    int32_t ret = ((OrigFunc)originalFunc)();
+
+    if (adol < baseAddress)
+        return ret;
+
+    int room = ReadValue<int>(baseAddress + 0x11E494);
+    int nextRoom = ReadValue<int>(baseAddress + 0x131554);
+    int AdolHP = baseAddress + 0x1317FC;
+    bool balcony = ReadValue<char>(AdolHP + 0x29C) && !ReadValue<char>(AdolHP + 0x298) && room >= 59;
+
+    if (feenaSpawned && feena >= baseAddress && !balcony && nextRoom == 0) {
+        camTarget.x = (ReadValue<int>(adol + 0x24) + ReadValue<int>(feena + 0x24)) / 2;
+        camTarget.y = (ReadValue<int>(adol + 0x28) + ReadValue<int>(feena + 0x28)) / 2;
+    }
+    else {
+        camTarget.x = ReadValue<int>(adol + 0x24);
+        camTarget.y = ReadValue<int>(adol + 0x28);
+    }
+
+    if (balcony && feenaSpawned && feena >= baseAddress) {
+        int xjump = ReadValue<int>(adol + 0x24) - lastAdolX;
+        if (std::abs(xjump) > 200) {
+            int newx = ReadValue<int>(feena + 0x24) + xjump;
+            WriteValue(feena + 0x24, newx);
+            WriteValue(feena + 0x30, newx * (int)std::pow(2, 16));
+        }
+    }
+    return ret;
+}
 
 void __fastcall Ys1MovementHook(void* arg1) {
     int Running = baseAddress + 0x142628,
@@ -63,17 +102,6 @@ void __fastcall Ys1MovementHook(void* arg1) {
     void* originalFunc = (void*)(baseAddress + 0x1B550);
     ((OrigFunc)originalFunc)(arg1);
 
-    if ((int)arg1 != feena) {
-        if (feenaSpawned && feena >= baseAddress) {
-            camTarget.x = (ReadValue<int>((int)arg1 + 0x24) + ReadValue<int>(feena + 0x24)) / 2;
-            camTarget.y = (ReadValue<int>((int)arg1 + 0x28) + ReadValue<int>(feena + 0x28)) / 2;
-        }
-        else {
-            camTarget.x = ReadValue<int>((int)arg1 + 0x24);
-            camTarget.y = ReadValue<int>((int)arg1 + 0x28);
-        }
-    }
-
     WriteValue(Running, prevRunning);
     WriteValue<char>(AdolInput + 0x31, prevMoving);
     WriteValue(AdolInput + 0x40, prevDirection);
@@ -109,6 +137,15 @@ void __fastcall Ys1DamageHook(uint32_t arg1) {
     ((OrigFunc)originalFunc)(arg1);
 
 	if ((int)arg1 == adol) {
+        int MapScriptPointer = baseAddress + 0x131504;
+        int newMap = ReadValue<int>(MapScriptPointer);
+        if (newMap != mapScript && newMap != (int)MapScriptHook) {
+            mapScript = newMap;
+            char bytes[4];
+            *(int*)bytes = (int)MapScriptHook;
+            WriteBytes(MapScriptPointer, bytes, 4);
+        }
+
         int FeenaData = AdolData + 4;
         feena = adol + 0x480;
         while (ReadValue<int>(FeenaData) >= baseAddress) {
@@ -142,8 +179,7 @@ void __fastcall Ys1DamageHook(uint32_t arg1) {
                 int slot1 = ReadValue<int>(AdolData + 4);
                 WriteValue<int>(FeenaData, slot1);
                 WriteValue<int>(AdolData + 4, feena);
-                WriteValue(feena + 0x24, ReadValue<int>(adol + 0x24));
-                WriteValue(feena + 0x28, ReadValue<int>(adol + 0x28));
+                justSpawned = true;
             }
             else {
                 OutputDebugStringA("Failed to spawn P2!");
@@ -176,26 +212,6 @@ void DamageRedirect(int16_t arg1, float arg2) {
         WriteBytes(baseAddress + 0x1CF01, "\xFC\x17", 2);
 }
 
-void TowerLoop() {
-    int AdolData = baseAddress + 0x14061C;
-    int adol = ReadValue<int>(AdolData);
-    int lastAdolX = ReadValue<int>(adol + 0x24);
-
-    typedef void(*OrigFunc)();
-    void* originalFunc = (void*)(baseAddress + 0x98650);
-    ((OrigFunc)originalFunc)();
-
-    int xjump = ReadValue<int>(adol + 0x24) - lastAdolX;
-    if (std::abs(xjump) > 200 && feenaSpawned && feena >= baseAddress) {
-        int newx = ReadValue<int>(feena + 0x24) + xjump;
-        WriteValue(feena + 0x24, newx);
-        WriteValue(feena + 0x30, newx * (int)std::pow(2, 16));
-    }
-
-    camTarget.x = ReadValue<int>(adol + 0x24);
-    camTarget.y = ReadValue<int>(adol + 0x28);
-}
-
 class ys1 : public Game
 {
 public:
@@ -222,7 +238,6 @@ public:
             FeenaHPBarCode2 = baseAddress + 0x5525E,
             KnockbackCode = baseAddress + 0x1D768,
             CamDummyCode = baseAddress + 0x8BE21,
-            TowerLoopCode = baseAddress + 0x77D06,
             BatAttackCode = baseAddress + 0x2606C;
 
         //WriteBytes(FeenaRoomCheckCode, "\x90\x90", 2);
@@ -241,9 +256,6 @@ public:
 		*(int*)bytes = (int)DamageRedirect - 5 - DamageRedirectCall;
         WriteBytes(DamageRedirectCall + 1, bytes, 4);
 
-        *(int*)bytes = (int)TowerLoop - 5 - TowerLoopCode;
-        WriteBytes(TowerLoopCode + 1, bytes, 4);
-
         *(int*)bytes = (int)&camTarget;
         WriteBytes(CamDummyCode, bytes, 4);
         camTarget.self = &camTarget;
@@ -260,7 +272,6 @@ public:
                 continue;
 
             int nextRoom = ReadValue<int>(NextRoom);
-            //allowFeena = ReadValue<int>(NextRoom) != 36;
 
             if (nextRoom > 0)
                 feenaSpawned = false;
@@ -311,20 +322,19 @@ public:
                     WriteValue<char>(adol + 0x19C, 1);
                 }
 
+                bool balcony = canHeal && ReadValue<int>(AdolRoom) >= 59;
                 //16:9 mode: 240, 136
                 int camCenterX = ReadValue<int>(cam) + ReadValue<int>(CamOffset + 0xC) / 2;
                 int camCenterY = ReadValue<int>(cam + 4) + ReadValue<int>(CamOffset + 0x10) / 2;
-                if (!ReadValue<char>(CanMove) || (ReadValue<int>(AdolRoom) == 36 && ReadValue<int>(FeenaActive)) 
-                    || std::abs(ReadValue<int>(feena + 0x24) - camCenterX) > maxDistanceX
-                    || std::abs(ReadValue<int>(feena + 0x28) - camCenterY) > maxDistanceY) {
+                if (!ReadValue<char>(CanMove) || justSpawned || (ReadValue<int>(AdolRoom) == 36 && ReadValue<int>(FeenaActive)) 
+                    || ((std::abs(ReadValue<int>(feena + 0x24) - camCenterX) > maxDistanceX
+                    || std::abs(ReadValue<int>(feena + 0x28) - camCenterY) > maxDistanceY))) {
                     WriteValue(feena + 0x24, ReadValue<int>(adol + 0x24));
                     WriteValue(feena + 0x28, ReadValue<int>(adol + 0x28));
                 }
+                if(ReadValue<int>(FadeOut) > 50)
+                    justSpawned = false;
             }
-            //else {
-            //    camTarget.x = ReadValue<int>(adol + 0x24);
-            //    camTarget.y = ReadValue<int>(adol + 0x28);
-            //}
 
             adolLastHP = ReadValue<short>(adol + 0x180);
         }
