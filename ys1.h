@@ -139,7 +139,7 @@ void __fastcall Ys1DamageHook(uint32_t arg1) {
 	if ((int)arg1 == adol) {
         int MapScriptPointer = baseAddress + 0x131504;
         int newMap = ReadValue<int>(MapScriptPointer);
-        if (newMap != mapScript && newMap != (int)MapScriptHook) {
+        if (newMap != (int)MapScriptHook) {
             mapScript = newMap;
             char bytes[4];
             *(int*)bytes = (int)MapScriptHook;
