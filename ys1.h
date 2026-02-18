@@ -14,6 +14,8 @@ struct CamDummy {
     int32_t y = 0;
 };
 CamDummy camTarget;
+int bossTargetPtr = 0;
+int lastEnemyHP = 0;
 
 int32_t MapScriptHook() {
     int adol = ReadValue<int>(baseAddress + 0x14061C);
@@ -224,6 +226,24 @@ void DamageRedirect(int16_t arg1, float arg2) {
         WriteBytes(baseAddress + 0x1CF01, "\xFC\x17", 2);
 }
 
+int32_t __fastcall Boss1(void* arg1) {
+    int adol = ReadValue<int>(baseAddress + 0x20BA48);
+    int bossHP = ReadValue<int>(baseAddress + 0x127DA4);
+	bool hpChanged = bossHP != lastEnemyHP;
+	lastEnemyHP = bossHP;
+
+    if(bossTargetPtr == 0)
+		bossTargetPtr = adol;
+
+    if (feenaSpawned && feena >= baseAddress && hpChanged) {
+        bossTargetPtr = bossTargetPtr == adol ? feena : adol;
+    }
+
+    typedef int32_t(__fastcall *OrigFunc)(void*);
+    void* originalFunc = (void*)(baseAddress + 0x2D850);
+    return ((OrigFunc)originalFunc)(arg1);
+}
+
 class ys1 : public Game
 {
 public:
@@ -244,6 +264,8 @@ public:
             FadeOut = baseAddress + 0x1313B0,
             FeenaMoveFuncPointer = baseAddress + 0xDB140,
             AdolMoveFuncPointer = baseAddress + 0xDAE30,
+            Boss1Pointer = baseAddress + 0xDB080,
+            Boss1TargetCode = baseAddress + 0x2DB4B,
             DamageRedirectCall = baseAddress + 0x1C4D7,
             FeenaStatShowCode = baseAddress + 0x9F10D,
             FeenaHPBarCode = baseAddress + 0x56C46,
@@ -264,6 +286,11 @@ public:
         WriteBytes(AdolMoveFuncPointer, bytes, 4);
         *(int*)bytes = (int)Ys1DamageHook;
         WriteBytes(AdolMoveFuncPointer + 0xC, bytes, 4);
+
+        *(int*)bytes = (int)Boss1;
+        WriteBytes(Boss1Pointer, bytes, 4);
+        *(int*)bytes = (int)&bossTargetPtr;
+        WriteBytes(Boss1TargetCode, bytes, 4);
 
 		*(int*)bytes = (int)DamageRedirect - 5 - DamageRedirectCall;
         WriteBytes(DamageRedirectCall + 1, bytes, 4);
