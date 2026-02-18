@@ -19,8 +19,11 @@ int32_t MapScriptHook() {
     int adol = ReadValue<int>(baseAddress + 0x14061C);
 
     int lastAdolX = 0;
-    if (adol >= baseAddress)
+    int lastAdolY = 0;
+    if (adol >= baseAddress) {
         lastAdolX = ReadValue<int>(adol + 0x24);
+        lastAdolY = ReadValue<int>(adol + 0x28);
+    }
 
     typedef int32_t(*OrigFunc)();
     void* originalFunc = (void*)(mapScript);
@@ -49,6 +52,13 @@ int32_t MapScriptHook() {
             int newx = ReadValue<int>(feena + 0x24) + xjump;
             WriteValue(feena + 0x24, newx);
             WriteValue(feena + 0x30, newx * (int)std::pow(2, 16));
+        }
+    }
+    else if (feenaSpawned && feena >= baseAddress) {
+        int jump = std::abs(ReadValue<int>(adol + 0x24) - lastAdolX) + std::abs(ReadValue<int>(adol + 0x28) - lastAdolY);
+        if (jump > 100) {
+            WriteValue(feena + 0x24, ReadValue<int>(adol+0x24));
+            WriteValue(feena + 0x28, ReadValue<int>(adol+0x28));
         }
     }
     return ret;
@@ -113,6 +123,7 @@ void __fastcall Ys1DamageHook(uint32_t arg1) {
     int AdolData = baseAddress + 0x20BA48;
     int adol = ReadValue<int>(AdolData);
     int NextRoom = baseAddress + 0x131554;
+    int room = ReadValue<int>(baseAddress + 0x11E494);
 
     if (adol < baseAddress || ReadValue<int>(NextRoom) > 0) {
         return;
@@ -160,13 +171,12 @@ void __fastcall Ys1DamageHook(uint32_t arg1) {
         if (ReadValue<int>(baseAddress + 0x1313B0) <= 0 && ReadValue<int>(FeenaData) < baseAddress)
             feena = 0;
 
-        else if (ReadValue<int>(FeenaData) < baseAddress) {
+        else if (ReadValue<int>(FeenaData) < baseAddress && !feenaSpawned && room != 106 && room != 98) {
             int FeenaRoom = baseAddress + 0x13169C;
             int FeenaActive = baseAddress + 0x131C44;
-            int AdolRoom = baseAddress + 0x11E494;
             int prevRoom = ReadValue<int>(FeenaRoom);
             int prevActive = ReadValue<char>(FeenaActive);
-            WriteValue<int>(FeenaRoom, ReadValue<int>(AdolRoom));
+            WriteValue<int>(FeenaRoom, room);
             WriteValue<char>(FeenaActive, 1);
 
             typedef int32_t(*AllocateCharacter)();
@@ -176,9 +186,11 @@ void __fastcall Ys1DamageHook(uint32_t arg1) {
 
             if (result && feena >= baseAddress) {
                 WriteBytes(feena, feenaSample, 0x480);
-                int slot1 = ReadValue<int>(AdolData + 4);
-                WriteValue<int>(FeenaData, slot1);
-                WriteValue<int>(AdolData + 4, feena);
+                if (room != 114) {
+                    int slot1 = ReadValue<int>(AdolData + 4);
+                    WriteValue<int>(FeenaData, slot1);
+                    WriteValue<int>(AdolData + 4, feena);
+                }
                 justSpawned = true;
             }
             else {
