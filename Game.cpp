@@ -25,6 +25,8 @@ int baseAddress = 0;
 char UP = 'I', DOWN = 'K', LEFT = 'J', RIGHT = 'L', WALK = 'U', ACTION = 'H', SAVE = 'P';
 float maxDistanceX = 250.0f;
 float maxDistanceY = 400.0f;
+int minQuicksave = 110;
+int maxQuicksave = 120;
 
 int FindPointer(int offsets[], int count)
 {
