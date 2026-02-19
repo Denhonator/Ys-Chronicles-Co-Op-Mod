@@ -376,6 +376,9 @@ public:
                     WriteValue<char>(adol + 0x19C, 1);
                 }
 
+                if (ReadValue<int>(feena + 0x280) != 0)
+                    WriteValue<int>(adol + 0x280, ReadValue<int>(feena + 0x280));
+
                 bool balcony = canHeal && ReadValue<int>(AdolRoom) >= 59;
                 //16:9 mode: 240, 136
                 int camCenterX = ReadValue<int>(cam) + ReadValue<int>(CamOffset + 0xC) / 2;
