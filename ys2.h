@@ -2,6 +2,7 @@
 #include "Game.h"
 
 int tarf = 0;
+int TarfData = baseAddress + 0x1453D8;
 char magicInput[11] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 bool prevMagic = false;
 float magicCharge = 0;
@@ -9,9 +10,20 @@ char magicChargeAddr[4];
 char origMagicChargeBytes[4];
 float regenTimer1 = 0;
 float regenTimer2 = 0;
+struct CamDummy2 {
+    CamDummy2* self;
+    char dummyData[0x60];
+    int32_t x = 0;
+    int32_t y = 0;
+};
+CamDummy2 camTarget2;
+int bossTarget = 0;
+int targetSwitchTimer = 0;
 
 int32_t __fastcall AdolMoveHook(void* arg1) {
     int Input = baseAddress + 0x25E398;
+	int Time = baseAddress + 0x25E394;
+    int timeMS = ReadValue<int>(Time);
 
     //typedef void* (__fastcall* InputFunc)(void*);
     //void* inputfunc = (void*)(baseAddress + 0x7FBB0);
@@ -84,6 +96,47 @@ int32_t __fastcall AdolMoveHook(void* arg1) {
 			regenTimer2 = 0;
         }
     }
+    else {
+        camTarget2.x = (ReadValue<int>(tarf + 0x64) + ReadValue<int>((int)arg1 + 0x64)) / 2;
+        camTarget2.y = (ReadValue<int>(tarf + 0x68) + ReadValue<int>((int)arg1 + 0x68)) / 2;
+
+		int EnemyHP = baseAddress + 0x138FE0;
+        int AdolData = baseAddress + 0x1453D0;
+
+        if (ReadValue<int>(EnemyHP) < lastEnemyHP && lastEnemyHP > 0 && ReadValue<int>(TarfData) == tarf 
+                                                            && ReadValue<int>(Time) > targetSwitchTimer) {
+            bossTarget = bossTarget == 0 ? (TarfData - AdolData) / 4 : 0;
+            targetSwitchTimer = timeMS + 5000;
+        }
+
+		lastEnemyHP = ReadValue<int>(EnemyHP);
+
+        if (GetKeyState(SAVE) & 0x8000 && savedTimer == 0) {
+            int PreviewWidth = baseAddress + 0x44C634;
+            int SavePreviewTrigger = baseAddress + 0x25DC7D;
+
+            if (ReadValue<int>(PreviewWidth) == 0) {
+                int SaveSlot = baseAddress + 0x425CF8;
+                int newslot = std::max<int>(curSlot, ReadValue<int>(SaveSlot)) + 1;
+                if (newslot > maxQuicksave)
+                    newslot = minQuicksave;
+                WriteValue(SaveSlot, newslot);
+				WriteValue<char>(SavePreviewTrigger, 1);
+            }
+
+            if (ReadValue<int>(PreviewWidth) > 0) {
+                typedef int32_t(*OrigFunc)();
+                void* originalFunc = (void*)(baseAddress + 0xC43D0);    //Preview img
+                ((OrigFunc)originalFunc)();
+                savedTimer = 90;
+				WriteValue<int>(PreviewWidth, 0);
+                WriteBytes((int)arg1 + 0x30C, "\x53\x61\x76\x65\x64", 5);
+                WriteValue<int>((int)arg1 + 0x328, 0x80000009);
+            }
+        }
+        else if (savedTimer > 0)
+            savedTimer--;
+    }
 
     typedef int32_t(__fastcall* OrigFunc)(void*);
     void* originalFunc = (void*)(baseAddress + 0x19E60);
@@ -99,13 +152,17 @@ public:
         int posXAddr[2] = { baseAddress + 0x1453D0, 0x14 };
         int TarfToggle = baseAddress + 0x25d3f0;
         int AdolData = baseAddress + 0x1453D0;
-        int TarfData = baseAddress + 0x1453D8;
         int TarfScan[2] = { baseAddress + 0x1453D4, 0x1DC };
         int TarfUI = baseAddress + 0x25D3F4;
         int TarfStats = baseAddress + 0x12C3F0;
         int ResetSpeedCode = baseAddress + 0x1A0D4;
         int ResetAnimCode = baseAddress + 0x1A0E3;
         int TarfRoomCheckCode = baseAddress + 0x8DA04;
+        int CameraCode = baseAddress + 0x6F8EF;
+        int CameraCode2 = baseAddress + 0x6F926;
+        int Boss1Target = baseAddress + 0x2251E;
+        int Boss1Target2 = baseAddress + 0x21352;
+        int Boss1Target3 = baseAddress + 0x23E07;
         int CanMove = baseAddress + 0x135884;
         int AdolRoom = baseAddress + 0x25c730;
         int NextRoom = baseAddress + 0x25e38c;
@@ -118,10 +175,22 @@ public:
         WriteBytes(ResetSpeedCode, "\x90\x90\x90\x90\x90\x90\x90", 7); //Nop out speed reset
         WriteBytes(ResetAnimCode, "\x90\x90\x90\x90\x90\x90\x90", 7);
         WriteBytes(TarfRoomCheckCode, "\x90\x90\xB3\x00", 4);
+        WriteBytes(CameraCode, "\x8B\x05\x01\x01\x01\x01\x90", 7);
+        WriteBytes(CameraCode2, "\x8B\x05\x01\x01\x01\x01\x90", 7);
 
         char bytes[4];
         *(int*)bytes = (int)AdolMoveHook;
 		WriteBytes(AdolMoveFuncPtr, bytes, 4);
+
+        *(int*)bytes = (int)&bossTarget;
+        WriteBytes(Boss1Target, bytes, 4);
+        WriteBytes(Boss1Target2, bytes, 4);
+        WriteBytes(Boss1Target3, bytes, 4);
+
+        *(int*)bytes = (int)&camTarget2;
+        WriteBytes(CameraCode+2, bytes, 4);
+        WriteBytes(CameraCode2+2, bytes, 4);
+		camTarget2.self = &camTarget2;
 
 		*(int*)magicChargeAddr = (int)(&magicCharge);
 		*(int*)origMagicChargeBytes = MagicCharge;
@@ -135,8 +204,10 @@ public:
             int adol = ReadValue<int>(AdolData);
 			int nextRoom = ReadValue<int>(NextRoom);
 
-            if (ReadValue<int>(AdolRoom) <= 1 || adol < baseAddress)
+            if (ReadValue<int>(AdolRoom) <= 1 || adol < baseAddress) {
+                bossTarget = 0;
                 continue;
+            }
 
 			bool foundTarf = false;
             TarfScan[0] = AdolData + 4;
@@ -157,6 +228,7 @@ public:
             if (foundTarf) {
                 WriteValue(tarf, 0x50B448);
                 //WriteValue(tarf + 0x1D8, 1);  //Character type
+                WriteValue(tarf + 0x1D4, 1);    //Character sprite
                 WriteValue(tarf + 0x1DC, 2);    //Character sprite
                 float prevMaxHP = ReadValue<short>(TarfStats + 4);
                 WriteValue(TarfStats + 4, ReadValue<short>(adol + 0xA4)); //Copy Tarf's HP from Adol's HP
