@@ -17,7 +17,6 @@ Adol's sprite is also used for P2 because it has all the necessary animation fra
 Players can be distinguished from one another by text above their heads that says P1 or P2 in different colors.
 
 Known issues:
--Sometimes P1 dies unexpectedly / HP bar shows someone else's HP
 -Light in cave gets attached to P2 when loading
 
 ## Ys 2
@@ -35,9 +34,7 @@ Currently Steam version is supported. I will check and fix GOG version once I ha
 Only a limited amount of testing has been done so far. There are probably bugs to fix when going through the entirity of both games.
 
 Other possible additions for future (not necessarily planned but could be worthwhile additions): 
-- Make enemies actually target P2 in Ys 1
-- Improved HUD for P2
-- Balancing options. Could be good to increase boss HP (Ys 2) or make it more forgiving so one player's fun isn't ruined by the other player dying.
+- Balancing options. Could be good to increase boss HP or make it more forgiving so one player's fun isn't ruined by the other player dying.
 - Built-in controller support for P2
 - Custom sprite for P2 like blue haired variant of Adol or something
 
