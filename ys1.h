@@ -270,6 +270,7 @@ public:
             CanMove = baseAddress + 0xF906C,
             EquippedRing = baseAddress + 0x131680,
             FadeOut = baseAddress + 0x1313B0,
+            FrameTime = baseAddress + 0xFD930,
             FeenaMoveFuncPointer = baseAddress + 0xDB140,
             AdolMoveFuncPointer = baseAddress + 0xDAE30,
             Boss1TargetCode = baseAddress + 0x2DB4B,
@@ -316,6 +317,7 @@ public:
 
         int adolLastHP = 0;
         int feenaRegenTimer = 0;
+        float normalFrameTime = 1;
 
         while (true) {
             Sleep(10);
@@ -331,35 +333,50 @@ public:
                 feenaSpawned = false;
 
             if (nextRoom == 0 && feenaSpawned && feena >= baseAddress) {
-				WriteValue<int>(FeenaActive+0x20, 1);   //HP bar
+                WriteValue<int>(FeenaActive + 0x20, 1);   //HP bar
                 //WriteValue(feena, 0x4DAE1C);
                 WriteValue<char>(feena + 0x250, ReadValue<char>(adol + 0x250));
                 WriteValue<char>(feena + 0x1CC, ReadValue<char>(adol + 0x1CC)); //Disable Feena specific damage
                 //WriteValue<char>(feena + 0x160, ReadValue<char>(adol + 0x160));
                 WriteValue(feena + 0x4C, ReadValue<int>(adol + 0x4C));    //Character sprite
-                float prevMaxHP = ReadValue<short>(FeenaHP + 4);
+                int prevMaxHP = ReadValue<int>(FeenaHP + 4);
                 WriteValue(FeenaHP + 4, ReadValue<short>(AdolHP + 4));        //Copy Feena's HP from Adol's HP
                 WriteValue(FeenaHP + 8, ReadValue<short>(adol + 0x188));      //Copy Feena's STR from Adol's STR
                 WriteValue(FeenaHP + 12, ReadValue<short>(adol + 0x18C));     //Copy Feena's DEF from Adol's DEF
                 WriteValue(feena + 0x184, ReadValue<short>(FeenaHP + 4));
                 WriteValue(feena + 0x188, ReadValue<short>(FeenaHP + 8));
                 WriteValue(feena + 0x18C, ReadValue<short>(FeenaHP + 0xC));
-                short curHP = ReadValue<short>(adol + 0x180);
+                int curHP = ReadValue<int>(AdolHP);
                 int canHeal = ReadValue<char>(AdolHP + 0x29C) && !ReadValue<char>(AdolHP + 0x298) ? 10 : 0;
-                if (prevMaxHP < ReadValue<short>(FeenaHP + 4))
-                    WriteValue(feena + 0x180, ReadValue<short>(FeenaHP + 4)); //If Feena's max HP increased, heal her to full
-                if (curHP - adolLastHP > canHeal && adolLastHP > 0)
-                    WriteValue(feena + 0x180, ReadValue<short>(feena + 0x180) + curHP - adolLastHP);
-                //WriteValue(FeenaHP, ReadValue<short>(feena + 0x180)); //Sync visual HP with actual HP
+                if (prevMaxHP < ReadValue<int>(FeenaHP + 4))
+                    WriteValue(FeenaHP, ReadValue<int>(FeenaHP) + ReadValue<int>(FeenaHP + 4) - prevMaxHP);
+                if (curHP - adolLastHP > 0 && curHP == ReadValue<int>(AdolHP + 4))
+                    WriteValue(FeenaHP, curHP);
+                else if (curHP - adolLastHP > canHeal && adolLastHP > 0)
+                    WriteValue(FeenaHP, std::min<int>(ReadValue<int>(FeenaHP) + curHP - adolLastHP, ReadValue<int>(FeenaHP + 4)));
+
+                canHeal += ReadValue<int>(EquippedRing) == 18 ? 5 : 0;
+
+                if (ReadValue<float>(FrameTime) > 10000) {
+                    if (normalFrameTime < 10000)
+                        normalFrameTime = ReadValue<float>(FrameTime);
+                    else if (canHeal > 0 && (ReadValue<int>(AdolHP) < ReadValue<int>(AdolHP + 4) || ReadValue<int>(FeenaHP) < ReadValue<int>(FeenaHP + 4))
+                        && ReadValue<int>(adol + 0x18) == 0 && ReadValue<int>(adol + 0x20) == 0 && ReadValue<int>(feena + 0x18) == 0 && ReadValue<int>(feena + 0x20) == 0
+                        && !ReadValue<char>(pause + 0x34) && GetKeyState(SPEEDUP) & 0x8000) {
+
+                        WriteValue(FrameTime, normalFrameTime * 0.2f);
+                        feenaRegenTimer += canHeal * 4;
+                    }
+                    else if (normalFrameTime > 10000)
+                        WriteValue(FrameTime, normalFrameTime);
+                }
 
                 if (ReadValue<int>(feena + 0x18) == 0 && ReadValue<int>(feena + 0x20) == 0 && ReadValue<int>(FeenaHP) > 0
                      && ReadValue<int>(FeenaHP) < ReadValue<int>(FeenaHP+4) && !ReadValue<char>(pause+0x34)) {
-                    
-                    canHeal += ReadValue<int>(EquippedRing) == 18 ? 5 : 0;
 
                     feenaRegenTimer += canHeal;
                     if (feenaRegenTimer >= 315 - (ReadValue<int>(FeenaHP+4) * 85) / 100) {
-                        WriteValue<short>(FeenaHP, ReadValue<short>(FeenaHP) + 1);
+                        WriteValue<int>(FeenaHP, ReadValue<int>(FeenaHP) + 1);
                         feenaRegenTimer = 0;
                     }
                 }
@@ -393,7 +410,7 @@ public:
                     justSpawned = false;
             }
 
-            adolLastHP = ReadValue<short>(adol + 0x180);
+            adolLastHP = ReadValue<short>(AdolHP);
         }
     }
 };

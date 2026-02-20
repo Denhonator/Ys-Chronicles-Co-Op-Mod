@@ -1,7 +1,7 @@
 #pragma once
 
 extern int baseAddress;
-extern char UP, DOWN, LEFT, RIGHT, WALK, ACTION, SAVE;
+extern char UP, DOWN, LEFT, RIGHT, WALK, ACTION, SAVE, SPEEDUP;
 extern int minQuicksave;
 extern int maxQuicksave;
 extern float maxDistanceX;

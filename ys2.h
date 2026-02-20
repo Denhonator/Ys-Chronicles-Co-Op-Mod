@@ -24,6 +24,7 @@ int32_t __fastcall AdolMoveHook(void* arg1) {
     int Input = baseAddress + 0x25E398;
 	int Time = baseAddress + 0x25E394;
     int timeMS = ReadValue<int>(Time);
+    int CanRest = baseAddress + 0x25D2BC;
 
     //typedef void* (__fastcall* InputFunc)(void*);
     //void* inputfunc = (void*)(baseAddress + 0x7FBB0);
@@ -50,7 +51,6 @@ int32_t __fastcall AdolMoveHook(void* arg1) {
   //  }
 
     if ((int)arg1 == tarf) {
-        int CanRest = baseAddress + 0x25D2BC;
 		int MPCharge = baseAddress + 0x25D3AC;
 		bool isDown = GetKeyState(ACTION) & 0x8000;
 		magicInput[9] = isDown && !prevMagic;
@@ -80,7 +80,7 @@ int32_t __fastcall AdolMoveHook(void* arg1) {
 
 		prevMagic = isDown;
 
-        if (ReadValue<char>(CanRest) && ReadValue<float>(tarf + 0x24) == 0 && ReadValue<float>(tarf + 0x4C) == 0 && ReadValue<int>(tarf + 0xA0) < ReadValue<int>(tarf + 0xA4)) {
+        if (ReadValue<char>(CanRest) && ReadValue<float>(tarf + 0x14C) < 0 && ReadValue<int>(tarf + 0xA0) < ReadValue<int>(tarf + 0xA4)) {
 			float fps = ReadValue<int>(baseAddress + 0x25E34C);
             regenTimer1 += 32.5f/fps;
             if (regenTimer1 >= 150.0f) {
@@ -171,6 +171,8 @@ public:
         int AdolMoveFuncPtr = baseAddress + 0x10B448;
 		int MagicCharge = baseAddress + 0x25CE14;
 		int TarfMagic = baseAddress + 0x25D380;
+        int FrameTime = baseAddress + 0x25E350;
+        int CanRest = baseAddress + 0x25D2BC;
 
         WriteBytes(ResetSpeedCode, "\x90\x90\x90\x90\x90\x90\x90", 7); //Nop out speed reset
         WriteBytes(ResetAnimCode, "\x90\x90\x90\x90\x90\x90\x90", 7);
@@ -197,6 +199,7 @@ public:
 
         int adolLastHP = ReadValue<short>(AdolData + 0xA0);
         int adolLastMP = ReadValue<short>(AdolData + 0xA8);
+        float normalFrameTime2 = 1;
 
         while (true) {
             Sleep(10);
@@ -221,6 +224,18 @@ public:
                 TarfScan[0] += 4;
             }
 
+            if (ReadValue<float>(FrameTime) > 10000 && foundTarf) {
+                if (normalFrameTime2 < 10000)
+                    normalFrameTime2 = ReadValue<float>(FrameTime);
+                else if (ReadValue<char>(CanRest) && (ReadValue<int>(adol + 0xA0) < ReadValue<int>(adol + 0xA4) || ReadValue<int>(tarf + 0xA0) < ReadValue<int>(tarf + 0xA4))
+                    && ReadValue<int>(adol + 0x14C) < 0 && ReadValue<int>(tarf + 0x14C) < 0 && GetKeyState(SPEEDUP) & 0x8000) {
+
+                    WriteValue(FrameTime, normalFrameTime2 * 0.4f);
+                }
+                else if (normalFrameTime2 > 10000)
+                    WriteValue(FrameTime, normalFrameTime2);
+            }
+
             bool allowTarf = ReadValue<short>(BlackOrbStatus) == 0x0100 || ReadValue<int>(AdolRoom) != 98;
             WriteValue(adol + 0x24, 0.0f); //Reset Adol's speed to prevent sliding
             WriteValue<char>(TarfToggle, allowTarf ? 44 : 0); //Keep Tarf active
@@ -242,8 +257,10 @@ public:
                 WriteValue(tarf + 0x234, ReadValue<short>(adol + 0x234)); //Copy spell
                 short curHP = ReadValue<short>(adol + 0xA0);
                 if (prevMaxHP < ReadValue<short>(TarfStats + 4))
-                    WriteValue(tarf + 0xA0, ReadValue<short>(TarfStats + 4)); //If Tarf's max HP increased, heal him to full
-                if (curHP - adolLastHP > 2 && adolLastHP > 0)
+                    WriteValue(tarf + 0xA0, ReadValue<int>(tarf+0xA0) + ReadValue<short>(TarfStats + 4) - prevMaxHP);
+                if(curHP - adolLastHP > 0 && curHP == ReadValue<int>(adol + 0xA4))
+                    WriteValue(tarf + 0xA0, curHP);
+                else if (curHP - adolLastHP > 1 && adolLastHP > 0)
                     WriteValue(tarf + 0xA0, ReadValue<short>(tarf + 0xA0) + curHP - adolLastHP);
                 if (ReadValue<short>(adol+0xA8) > adolLastMP && ReadValue<short>(adol + 0xA8) == ReadValue<short>(adol + 0xAC))
 					WriteValue(tarf + 0xA8, ReadValue<int>(tarf + 0xAC));
