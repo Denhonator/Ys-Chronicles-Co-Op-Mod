@@ -73,10 +73,10 @@ DWORD WINAPI HookThread(LPVOID) {
             else if (key.find("Right") != std::string::npos) RIGHT = value[0];
             else if (key.find("Walk") != std::string::npos) WALK = value[0];
             else if (key.find("Action") != std::string::npos) ACTION = value[0];
-            else if (key.find("Quicksave") != std::string::npos) SAVE = value[0];
             else if (key.find("Speedup") != std::string::npos) SPEEDUP = value[0];
             else if (key.find("FirstQuicksaveSlot") != std::string::npos) minQuicksave = std::stoi(value);
             else if (key.find("LastQuicksaveSlot") != std::string::npos) maxQuicksave = std::stoi(value);
+            else if (key.find("Quicksave") != std::string::npos) SAVE = value[0];
             else if (key.find("MaxDistanceX") != std::string::npos) maxDistanceX = std::stof(value);
             else if (key.find("MaxDistanceY") != std::string::npos) maxDistanceY = std::stof(value);
         }

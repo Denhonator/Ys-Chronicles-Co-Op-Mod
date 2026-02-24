@@ -96,7 +96,7 @@ int32_t __fastcall AdolMoveHook(void* arg1) {
 			regenTimer2 = 0;
         }
     }
-    else {
+    else if (ReadValue<int>(TarfData) == tarf && tarf > 0) {
         camTarget2.x = (ReadValue<int>(tarf + 0x64) + ReadValue<int>((int)arg1 + 0x64)) / 2;
         camTarget2.y = (ReadValue<int>(tarf + 0x68) + ReadValue<int>((int)arg1 + 0x68)) / 2;
 
@@ -136,6 +136,10 @@ int32_t __fastcall AdolMoveHook(void* arg1) {
         }
         else if (savedTimer > 0)
             savedTimer--;
+    }
+    else {
+        camTarget2.x = ReadValue<int>((int)arg1 + 0x64);
+        camTarget2.y = ReadValue<int>((int)arg1 + 0x68);
     }
 
     typedef int32_t(__fastcall* OrigFunc)(void*);
@@ -202,7 +206,7 @@ public:
         float normalFrameTime2 = 1;
 
         while (true) {
-            Sleep(10);
+            Sleep(5);
 
             int adol = ReadValue<int>(AdolData);
 			int nextRoom = ReadValue<int>(NextRoom);
