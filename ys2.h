@@ -177,6 +177,7 @@ public:
 		int TarfMagic = baseAddress + 0x25D380;
         int FrameTime = baseAddress + 0x25E350;
         int CanRest = baseAddress + 0x25D2BC;
+        int Fade = baseAddress + 0x12C3EA;
 
         WriteBytes(ResetSpeedCode, "\x90\x90\x90\x90\x90\x90\x90", 7); //Nop out speed reset
         WriteBytes(ResetAnimCode, "\x90\x90\x90\x90\x90\x90\x90", 7);
@@ -216,9 +217,15 @@ public:
                 continue;
             }
 
+            if (ReadValue<unsigned char>(Fade) < 10) {
+                tarf = 0;
+                continue;
+            }
+
 			bool foundTarf = false;
             TarfScan[0] = AdolData + 4;
-            while (ReadValue<int>(TarfScan[0]) >= baseAddress) {
+            int blankCounter = 0;
+            while (blankCounter < 20) {
                 if (ReadValue<int>(TarfScan, 2) == 0x2C || ReadValue<int>(TarfScan, 2) == 2 || ReadValue<int>(TarfScan, 2) == 1) {
                     TarfData = TarfScan[0];
                     tarf = ReadValue<int>(TarfData);
@@ -226,6 +233,8 @@ public:
                     break;
                 }
                 TarfScan[0] += 4;
+                if (ReadValue<int>(TarfScan[0]) < baseAddress)
+                    blankCounter++;
             }
 
             if (ReadValue<float>(FrameTime) > 10000 && foundTarf) {

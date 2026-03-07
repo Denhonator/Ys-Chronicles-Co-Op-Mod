@@ -9,6 +9,8 @@ template short ReadValue<short>(int offsets[], int count);
 template short ReadValue<short>(int offset);
 template char ReadValue<char>(int offsets[], int count);
 template char ReadValue<char>(int offset);
+template unsigned char ReadValue<unsigned char>(int offsets[], int count);
+template unsigned char ReadValue<unsigned char>(int offset);
 template float ReadValue<float>(int offsets[], int count);
 template float ReadValue<float>(int offset);
 
