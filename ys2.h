@@ -177,9 +177,8 @@ public:
         int Boss1Target = baseAddress + 0x2251E;
         int Boss1Target2 = baseAddress + 0x21352;
         int Boss1Target3 = baseAddress + 0x23E07;
-        int Boss2Target = baseAddress + 0x24F90+1;
-        int Boss2Target2 = baseAddress + 0x783C6+1;
-        int Boss2Target3 = baseAddress + 0x9D66F+1;
+        int Boss2Target = baseAddress + 0x18A00+1;
+        int Boss2Target2 = baseAddress + 0x2491D+2;
         int CanMove = baseAddress + 0x135884;
         int AdolRoom = baseAddress + 0x25c730;
         //int TarfRoom = baseAddress + 0x25cecc;
@@ -212,9 +211,8 @@ public:
         WriteBytes(Boss1Target2, bytes, 4);
         WriteBytes(Boss1Target3, bytes, 4);
 
-        //WriteBytes(Boss2Target, bytes, 4);
-        //WriteBytes(Boss2Target2, bytes, 4);
-        //WriteBytes(Boss2Target3, bytes, 4);
+        WriteBytes(Boss2Target, bytes, 4);
+        WriteBytes(Boss2Target2, bytes, 4);
 
         *(int*)bytes = (int)&camTarget2;
         WriteBytes(CameraCode+2, bytes, 4);
@@ -303,6 +301,13 @@ public:
                     WriteValue(tarf + 0xA0, ReadValue<short>(tarf + 0xA0) + curHP - adolLastHP);
                 if (ReadValue<short>(adol+0xA8) > adolLastMP && ReadValue<short>(adol + 0xA8) == ReadValue<short>(adol + 0xAC))
 					WriteValue(tarf + 0xA8, ReadValue<int>(tarf + 0xAC));
+
+                if (ReadValue<int>(AdolRoom) == 74) {   //Boss2 insta kill
+                    if (ReadValue<int>(adol + 0xD8) > 0)
+                        WriteValue(adol + 0xA0, 0);
+					if (ReadValue<int>(tarf + 0xD8) > 0)
+						WriteValue(tarf + 0xA0, 0);
+                }
 
                 float verticalDir = (GetKeyState(UP) & 0x8000) ? 1.0f : ((GetKeyState(DOWN) & 0x8000) ? -1.0f : 0.0f);
                 float horizontalDir = (GetKeyState(RIGHT) & 0x8000) ? 1.0f : ((GetKeyState(LEFT) & 0x8000) ? -1.0f : 0.0f);
