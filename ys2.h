@@ -25,6 +25,8 @@ int32_t __fastcall AdolMoveHook(void* arg1) {
 	int Time = baseAddress + 0x25E394;
     int timeMS = ReadValue<int>(Time);
     int CanRest = baseAddress + 0x25D2BC;
+    int SavePage = baseAddress + 0x425CF0;
+    int SaveNum = baseAddress + 0x131D14;
 
     //typedef void* (__fastcall* InputFunc)(void*);
     //void* inputfunc = (void*)(baseAddress + 0x7FBB0);
@@ -122,6 +124,9 @@ int32_t __fastcall AdolMoveHook(void* arg1) {
                     newslot = minQuicksave;
                 WriteValue(SaveSlot, newslot);
 				WriteValue<char>(SavePreviewTrigger, 1);
+
+                WriteValue<int>(SavePage, newslot / 11);
+				WriteValue<int>(SaveNum, newslot % 11);
             }
 
             if (ReadValue<int>(PreviewWidth) > 0) {
@@ -167,9 +172,14 @@ public:
         int TarfRoomCheckCode3 = baseAddress + 0x4CC60;
         int CameraCode = baseAddress + 0x6F8EF;
         int CameraCode2 = baseAddress + 0x6F926;
+        int IceBossCamXCode = baseAddress + 0x18A6A;
+        int IceBossCamYCode = baseAddress + 0x18A9A;
         int Boss1Target = baseAddress + 0x2251E;
         int Boss1Target2 = baseAddress + 0x21352;
         int Boss1Target3 = baseAddress + 0x23E07;
+        int Boss2Target = baseAddress + 0x24F90+1;
+        int Boss2Target2 = baseAddress + 0x783C6+1;
+        int Boss2Target3 = baseAddress + 0x9D66F+1;
         int CanMove = baseAddress + 0x135884;
         int AdolRoom = baseAddress + 0x25c730;
         //int TarfRoom = baseAddress + 0x25cecc;
@@ -190,6 +200,8 @@ public:
         WriteBytes(TarfRoomCheckCode3, "\xEB\x44", 2);
         WriteBytes(CameraCode, "\x8B\x05\x01\x01\x01\x01\x90", 7);
         WriteBytes(CameraCode2, "\x8B\x05\x01\x01\x01\x01\x90", 7);
+        WriteBytes(IceBossCamXCode, "\x8B\x05\x01\x01\x01\x01\x90", 7);
+        WriteBytes(IceBossCamYCode, "\x8B\x05\x01\x01\x01\x01\x90", 7);
 
         char bytes[4];
         *(int*)bytes = (int)AdolMoveHook;
@@ -200,9 +212,15 @@ public:
         WriteBytes(Boss1Target2, bytes, 4);
         WriteBytes(Boss1Target3, bytes, 4);
 
+        //WriteBytes(Boss2Target, bytes, 4);
+        //WriteBytes(Boss2Target2, bytes, 4);
+        //WriteBytes(Boss2Target3, bytes, 4);
+
         *(int*)bytes = (int)&camTarget2;
         WriteBytes(CameraCode+2, bytes, 4);
         WriteBytes(CameraCode2+2, bytes, 4);
+        WriteBytes(IceBossCamXCode + 2, bytes, 4);
+        WriteBytes(IceBossCamYCode + 2, bytes, 4);
 		camTarget2.self = &camTarget2;
 
 		*(int*)magicChargeAddr = (int)(&magicCharge);
@@ -265,6 +283,7 @@ public:
                 //WriteValue(tarf + 0x1D8, 1);  //Character type
                 WriteValue(tarf + 0x1D4, 1);    //Character sprite
                 WriteValue(tarf + 0x1DC, 2);    //Character sprite
+                WriteValue(tarf + 0x60, ReadValue<char>(adol+0x60));    //Collision layer
                 float prevMaxHP = ReadValue<short>(TarfStats + 4);
                 WriteValue(TarfStats + 4, ReadValue<short>(adol + 0xA4)); //Copy Tarf's HP from Adol's HP
                 WriteValue(TarfStats + 6, ReadValue<short>(adol + 0xB0)); //Copy Tarf's STR from Adol's STR
