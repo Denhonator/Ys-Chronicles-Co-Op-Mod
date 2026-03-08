@@ -227,6 +227,7 @@ public:
         int adolLastHP = ReadValue<short>(AdolData + 0xA0);
         int adolLastMP = ReadValue<short>(AdolData + 0xA8);
         float normalFrameTime2 = 1;
+        bool tarfSaved = false;
 
         while (true) {
             Sleep(5);
@@ -271,9 +272,14 @@ public:
                     WriteValue(FrameTime, normalFrameTime2);
             }
 
+            if (ReadValue<int>(AdolRoom) != 98 || ReadValue<int>(NextRoom) != 98)
+                tarfSaved = false;
+            else if (foundTarf && ReadValue<float>(tarf + 0x18) < 1100 && ReadValue<int>(AdolRoom) == 98)
+				tarfSaved = true;
+
             bool allowTarf = ReadValue<short>(BlackOrbStatus) == 0x0100 || ReadValue<int>(NextRoom) != 98;
             WriteValue(adol + 0x24, 0.0f); //Reset Adol's speed to prevent sliding
-            WriteValue<char>(TarfToggle, 44); //Keep Tarf active
+            WriteValue<char>(TarfToggle, tarfSaved && allowTarf ? 0 : 44); //Keep Tarf active
             WriteValue<char>(TarfGone, allowTarf ? 0 : 1);
 
             if (foundTarf) {
@@ -334,8 +340,11 @@ public:
                 float camCenterY = ReadValue<int>(cam + 4) + 192.0f;
                 if (std::abs(ReadValue<float>(tarf + 0x14) - camCenterX) > maxDistanceX
                     || std::abs(ReadValue<float>(tarf + 0x18) - camCenterY) > maxDistanceY) {
-                    WriteValue(tarf + 0x14, ReadValue<float>(adol + 0x14) + 25.0f);
-                    WriteValue(tarf + 0x18, ReadValue<float>(adol + 0x18) - 25.0f);
+					float x = ReadValue<float>(adol + 0x28);
+					float y = x > 0.0f && x < 2048.0f ? -20.0f : x != 0.0f && x != 2048.0f ? 20.0f : 0.0f;
+					x = x < 1024.0f || x > 3072.0f ? -20.0f : x != 1024.0f && x != 3072.0f ? 20.0f : 0.0f;
+                    WriteValue(tarf + 0x14, ReadValue<float>(adol + 0x14) + x);
+                    WriteValue(tarf + 0x18, ReadValue<float>(adol + 0x18) + y);
                 }
             }
 
