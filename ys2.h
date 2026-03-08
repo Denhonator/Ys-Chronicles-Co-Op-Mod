@@ -155,6 +155,7 @@ public:
     void main() {
         int posXAddr[2] = { baseAddress + 0x1453D0, 0x14 };
         int TarfToggle = baseAddress + 0x25d3f0;
+        int TarfGone = baseAddress + 0x25CEDC;
         int AdolData = baseAddress + 0x1453D0;
         int TarfScan[2] = { baseAddress + 0x1453D4, 0x1DC };
         int TarfUI = baseAddress + 0x25D3F4;
@@ -162,6 +163,8 @@ public:
         int ResetSpeedCode = baseAddress + 0x1A0D4;
         int ResetAnimCode = baseAddress + 0x1A0E3;
         int TarfRoomCheckCode = baseAddress + 0x8DA04;
+        int TarfRoomCheckCode2 = baseAddress + 0x4CA8B;
+        int TarfRoomCheckCode3 = baseAddress + 0x4CC60;
         int CameraCode = baseAddress + 0x6F8EF;
         int CameraCode2 = baseAddress + 0x6F926;
         int Boss1Target = baseAddress + 0x2251E;
@@ -169,6 +172,7 @@ public:
         int Boss1Target3 = baseAddress + 0x23E07;
         int CanMove = baseAddress + 0x135884;
         int AdolRoom = baseAddress + 0x25c730;
+        //int TarfRoom = baseAddress + 0x25cecc;
         int NextRoom = baseAddress + 0x25e38c;
         int cam = baseAddress + 0x25D6D0;
         int BlackOrbStatus = baseAddress + 0x25C8A6;
@@ -181,7 +185,9 @@ public:
 
         WriteBytes(ResetSpeedCode, "\x90\x90\x90\x90\x90\x90\x90", 7); //Nop out speed reset
         WriteBytes(ResetAnimCode, "\x90\x90\x90\x90\x90\x90\x90", 7);
-        WriteBytes(TarfRoomCheckCode, "\x90\x90\xB3\x00", 4);
+        WriteBytes(TarfRoomCheckCode, "\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90", 10);
+        WriteBytes(TarfRoomCheckCode2, "\xEB\x12", 2);
+        WriteBytes(TarfRoomCheckCode3, "\xEB\x44", 2);
         WriteBytes(CameraCode, "\x8B\x05\x01\x01\x01\x01\x90", 7);
         WriteBytes(CameraCode2, "\x8B\x05\x01\x01\x01\x01\x90", 7);
 
@@ -217,7 +223,7 @@ public:
                 continue;
             }
 
-            if (ReadValue<unsigned char>(Fade) < 10) {
+            if (ReadValue<unsigned char>(Fade) < 30) {
                 tarf = 0;
                 continue;
             }
@@ -249,9 +255,10 @@ public:
                     WriteValue(FrameTime, normalFrameTime2);
             }
 
-            bool allowTarf = ReadValue<short>(BlackOrbStatus) == 0x0100 || ReadValue<int>(AdolRoom) != 98;
+            bool allowTarf = ReadValue<short>(BlackOrbStatus) == 0x0100 || ReadValue<int>(NextRoom) != 98;
             WriteValue(adol + 0x24, 0.0f); //Reset Adol's speed to prevent sliding
-            WriteValue<char>(TarfToggle, allowTarf ? 44 : 0); //Keep Tarf active
+            WriteValue<char>(TarfToggle, 44); //Keep Tarf active
+            WriteValue<char>(TarfGone, allowTarf ? 0 : 1);
 
             if (foundTarf) {
                 WriteValue(tarf, 0x50B448);
