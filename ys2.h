@@ -190,6 +190,7 @@ public:
 		int TarfMagic = baseAddress + 0x25D380;
         int FrameTime = baseAddress + 0x25E350;
         int CanRest = baseAddress + 0x25D2BC;
+        int RegenTimer = baseAddress + 0x25D3B0;
         int Fade = baseAddress + 0x12C3EA;
 
         WriteBytes(ResetSpeedCode, "\x90\x90\x90\x90\x90\x90\x90", 7); //Nop out speed reset
@@ -298,21 +299,21 @@ public:
                     WriteValue(tarf + 0xAC, ReadValue<short>(readFrom + 12)); //Copy MP
                 }
                 WriteValue(tarf + 0x234, ReadValue<short>(adol + 0x234)); //Copy spell
-                short curHP = ReadValue<short>(adol + 0xA0);
-                if (prevMaxHP < ReadValue<short>(TarfStats + 4))
-                    WriteValue(tarf + 0xA0, ReadValue<int>(tarf+0xA0) + ReadValue<short>(TarfStats + 4) - prevMaxHP);
-                if(curHP - adolLastHP > 0 && curHP == ReadValue<int>(adol + 0xA4))
-                    WriteValue(tarf + 0xA0, curHP);
-                else if (curHP - adolLastHP > 1 && adolLastHP > 0)
-                    WriteValue(tarf + 0xA0, ReadValue<short>(tarf + 0xA0) + curHP - adolLastHP);
-                if (ReadValue<short>(adol+0xA8) > adolLastMP && ReadValue<short>(adol + 0xA8) == ReadValue<short>(adol + 0xAC))
-					WriteValue(tarf + 0xA8, ReadValue<int>(tarf + 0xAC));
+                if (ReadValue<unsigned char>(Fade) == 255) {
+                    short curHP = ReadValue<short>(adol + 0xA0);
+                    if (curHP - adolLastHP > 0 && curHP == ReadValue<int>(adol + 0xA4))
+                        WriteValue(tarf + 0xA0, curHP);
+                    else if (curHP - adolLastHP > 0 && adolLastHP > 0 && ReadValue<float>(RegenTimer) < 150.0f)
+                        WriteValue(tarf + 0xA0, ReadValue<short>(tarf + 0xA0) + curHP - adolLastHP);
+                    if (ReadValue<short>(adol + 0xA8) > adolLastMP && ReadValue<short>(adol + 0xA8) == ReadValue<short>(adol + 0xAC))
+                        WriteValue(tarf + 0xA8, ReadValue<int>(tarf + 0xAC));
 
-                if (ReadValue<int>(AdolRoom) == 74) {   //Boss2 insta kill
-                    if (ReadValue<int>(adol + 0xD8) > 0)
-                        WriteValue(adol + 0xA0, 0);
-					if (ReadValue<int>(tarf + 0xD8) > 0)
-						WriteValue(tarf + 0xA0, 0);
+                    if (ReadValue<int>(AdolRoom) == 74) {   //Boss2 insta kill
+                        if (ReadValue<int>(adol + 0xD8) > 0)
+                            WriteValue(adol + 0xA0, 0);
+                        if (ReadValue<int>(tarf + 0xD8) > 0)
+                            WriteValue(tarf + 0xA0, 0);
+                    }
                 }
 
                 float verticalDir = (GetKeyState(UP) & 0x8000) ? 1.0f : ((GetKeyState(DOWN) & 0x8000) ? -1.0f : 0.0f);
