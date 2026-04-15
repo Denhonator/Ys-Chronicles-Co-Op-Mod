@@ -82,7 +82,7 @@ int32_t __fastcall AdolMoveHook(void* arg1) {
 
 		prevMagic = isDown;
 
-        if (ReadValue<char>(CanRest) && ReadValue<float>(tarf + 0x14C) < 0 && ReadValue<int>(tarf + 0xA0) < ReadValue<int>(tarf + 0xA4)) {
+        if (ReadValue<char>(CanRest) && ReadValue<int>(tarf + 0x14C) < 0 && ReadValue<int>(tarf + 0xA0) < ReadValue<int>(tarf + 0xA4)) {
 			float fps = ReadValue<int>(baseAddress + 0x25E34C);
             regenTimer1 += 32.5f/fps;
             if (regenTimer1 >= 150.0f) {
