@@ -180,6 +180,8 @@ public:
         int Boss1Target3 = baseAddress + 0x23E07;
         int Boss2Target = baseAddress + 0x18A00+1;
         int Boss2Target2 = baseAddress + 0x2491D+2;
+        int Boss3Target = baseAddress + 0x27B21 + 1;
+        int Boss3Target2 = baseAddress + 0x2978F + 1;
         int CanMove = baseAddress + 0x135884;
         int AdolRoom = baseAddress + 0x25c730;
         //int TarfRoom = baseAddress + 0x25cecc;
@@ -215,6 +217,9 @@ public:
 
         WriteBytes(Boss2Target, bytes, 4);
         WriteBytes(Boss2Target2, bytes, 4);
+
+        WriteBytes(Boss3Target, bytes, 4);
+        WriteBytes(Boss3Target2, bytes, 4);
 
         *(int*)bytes = (int)&camTarget2;
         WriteBytes(CameraCode+2, bytes, 4);
