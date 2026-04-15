@@ -170,6 +170,7 @@ public:
         int TarfRoomCheckCode = baseAddress + 0x8DA04;
         int TarfRoomCheckCode2 = baseAddress + 0x4CA8B;
         int TarfRoomCheckCode3 = baseAddress + 0x4CC60;
+        int BridgeDown = baseAddress + 0x25D4D9;
         int CameraCode = baseAddress + 0x6F8EF;
         int CameraCode2 = baseAddress + 0x6F926;
         int IceBossCamXCode = baseAddress + 0x18A6A;
@@ -273,10 +274,7 @@ public:
                     WriteValue(FrameTime, normalFrameTime2);
             }
 
-            if (ReadValue<int>(AdolRoom) != 98 || ReadValue<int>(NextRoom) != 98)
-                tarfSaved = false;
-            else if (foundTarf && ReadValue<float>(tarf + 0x18) < 1100 && ReadValue<int>(AdolRoom) == 98)
-				tarfSaved = true;
+            tarfSaved = ReadValue<char>(BridgeDown) > 0;
 
             bool allowTarf = ReadValue<short>(BlackOrbStatus) == 0x0100 || ReadValue<int>(NextRoom) != 98;
             WriteValue(adol + 0x24, 0.0f); //Reset Adol's speed to prevent sliding
