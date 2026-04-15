@@ -286,7 +286,8 @@ public:
                 //WriteValue(tarf + 0x1D8, 1);  //Character type
                 WriteValue(tarf + 0x1D4, 1);    //Character sprite
                 WriteValue(tarf + 0x1DC, 2);    //Character sprite
-                WriteValue(tarf + 0x60, ReadValue<char>(adol+0x60));    //Collision layer
+                if(ReadValue<unsigned char>(Fade) < 255)
+                    WriteValue(tarf + 0x60, ReadValue<char>(adol+0x60));    //Collision layer
                 float prevMaxHP = ReadValue<short>(TarfStats + 4);
                 WriteValue(TarfStats + 4, ReadValue<short>(adol + 0xA4)); //Copy Tarf's HP from Adol's HP
                 WriteValue(TarfStats + 6, ReadValue<short>(adol + 0xB0)); //Copy Tarf's STR from Adol's STR
