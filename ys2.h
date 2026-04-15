@@ -279,7 +279,7 @@ public:
                     WriteValue(FrameTime, normalFrameTime2);
             }
 
-            tarfSaved = ReadValue<char>(BridgeDown) > 0;
+            tarfSaved = ReadValue<char>(BridgeDown) > 0 && ReadValue<int>(NextRoom) == 98;
 
             bool allowTarf = ReadValue<short>(BlackOrbStatus) == 0x0100 || ReadValue<int>(NextRoom) != 98;
             WriteValue(adol + 0x24, 0.0f); //Reset Adol's speed to prevent sliding
