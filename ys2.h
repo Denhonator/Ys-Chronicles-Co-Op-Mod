@@ -344,7 +344,7 @@ public:
                 float camCenterX = ReadValue<int>(cam) + 296.0f;
                 float camCenterY = ReadValue<int>(cam + 4) + 192.0f;
                 if (std::abs(ReadValue<float>(tarf + 0x14) - camCenterX) > maxDistanceX
-                    || std::abs(ReadValue<float>(tarf + 0x18) - camCenterY) > maxDistanceY) {
+                    || std::abs(ReadValue<float>(tarf + 0x18) - camCenterY) > (ReadValue<int>(AdolRoom) == 98 ? 400 : maxDistanceY)) {
 					float x = ReadValue<float>(adol + 0x28);
 					float y = x > 0.0f && x < 2048.0f ? -20.0f : x != 0.0f && x != 2048.0f ? 20.0f : 0.0f;
 					x = x < 1024.0f || x > 3072.0f ? -20.0f : x != 1024.0f && x != 3072.0f ? 20.0f : 0.0f;
