@@ -18,6 +18,7 @@ struct CamDummy2 {
 };
 CamDummy2 camTarget2;
 int bossTarget = 0;
+int bossTarget2 = 0;
 int targetSwitchTimer = 0;
 
 int32_t __fastcall AdolMoveHook(void* arg1) {
@@ -82,6 +83,17 @@ int32_t __fastcall AdolMoveHook(void* arg1) {
 
 		prevMagic = isDown;
 
+		int AdolRoom = baseAddress + 0x25c730;
+		int AdolSlot = baseAddress + 0x124510;
+
+        if (ReadValue<int>(AdolRoom) == 197) {
+            typedef uint32_t(*FinalBossArena)();
+            void* originalFunc = (void*)(baseAddress + 0xA08A0);
+            WriteValue(AdolSlot, 3);
+            ((FinalBossArena)originalFunc)();
+            WriteValue(AdolSlot, 0);
+        }
+
         if (ReadValue<char>(CanRest) && ReadValue<int>(tarf + 0x14C) < 0 && ReadValue<int>(tarf + 0xA0) < ReadValue<int>(tarf + 0xA4)) {
 			float fps = ReadValue<int>(baseAddress + 0x25E34C);
             regenTimer1 += 32.5f/fps;
@@ -103,15 +115,19 @@ int32_t __fastcall AdolMoveHook(void* arg1) {
         camTarget2.y = (ReadValue<int>(tarf + 0x68) + ReadValue<int>((int)arg1 + 0x68)) / 2;
 
 		int EnemyHP = baseAddress + 0x138FE0;
+		int EnemyHP2 = baseAddress + 0x1390C0;
         int AdolData = baseAddress + 0x1453D0;
 
-        if (ReadValue<int>(EnemyHP) < lastEnemyHP && lastEnemyHP > 0 && ReadValue<int>(TarfData) == tarf 
-                                                            && ReadValue<int>(Time) > targetSwitchTimer) {
+        if (ReadValue<int>(EnemyHP)+ReadValue<int>(EnemyHP2) < lastEnemyHP && lastEnemyHP > 0 && ReadValue<int>(TarfData) == tarf 
+                                                            && timeMS > targetSwitchTimer) {
             bossTarget = bossTarget == 0 ? (TarfData - AdolData) / 4 : 0;
             targetSwitchTimer = timeMS + 5000;
         }
 
-		lastEnemyHP = ReadValue<int>(EnemyHP);
+        if(bossTarget >= 0)
+            bossTarget2 = bossTarget == 0 ? (TarfData - AdolData) / 4 : 0;
+
+		lastEnemyHP = ReadValue<int>(EnemyHP)+ReadValue<int>(EnemyHP2);
 
         if (GetKeyState(SAVE) & 0x8000 && savedTimer == 0) {
             int PreviewWidth = baseAddress + 0x44C634;
@@ -173,6 +189,7 @@ public:
         int BridgeDown = baseAddress + 0x25D4D9;
         int CameraCode = baseAddress + 0x6F8EF;
         int CameraCode2 = baseAddress + 0x6F926;
+        int CameraCode3 = baseAddress + 0x6F18C;
         int IceBossCamXCode = baseAddress + 0x18A6A;
         int IceBossCamYCode = baseAddress + 0x18A9A;
         int Boss1Target = baseAddress + 0x2251E;
@@ -182,6 +199,14 @@ public:
         int Boss2Target2 = baseAddress + 0x2491D+2;
         int Boss3Target = baseAddress + 0x27B21 + 1;
         int Boss3Target2 = baseAddress + 0x2978F + 1;
+        int Boss4Target = baseAddress + 0x2C77A + 2;
+        int Boss4Target2 = baseAddress + 0x2F697 + 1;
+        int Boss4Target3 = baseAddress + 0xB24DF + 1;
+        int Boss5Target = baseAddress + 0x32866 + 2;
+        int Boss6Target = baseAddress + 0x4AC61 + 1;
+        int Boss6Target2 = baseAddress + 0x349FF + 2;
+        int Boss7Target = baseAddress + 0x4B7A9 + 2;
+        int Boss7Target2 = baseAddress + 0x4C2AE + 2;
         int CanMove = baseAddress + 0x135884;
         int AdolRoom = baseAddress + 0x25c730;
         //int TarfRoom = baseAddress + 0x25cecc;
@@ -203,6 +228,7 @@ public:
         WriteBytes(TarfRoomCheckCode3, "\xEB\x44", 2);
         WriteBytes(CameraCode, "\x8B\x05\x01\x01\x01\x01\x90", 7);
         WriteBytes(CameraCode2, "\x8B\x05\x01\x01\x01\x01\x90", 7);
+        WriteBytes(CameraCode3, "\xB8", 1);
         WriteBytes(IceBossCamXCode, "\x8B\x05\x01\x01\x01\x01\x90", 7);
         WriteBytes(IceBossCamYCode, "\x8B\x05\x01\x01\x01\x01\x90", 7);
 
@@ -221,9 +247,24 @@ public:
         WriteBytes(Boss3Target, bytes, 4);
         WriteBytes(Boss3Target2, bytes, 4);
 
+        WriteBytes(Boss4Target, bytes, 4);
+        WriteBytes(Boss4Target2, bytes, 4);
+        WriteBytes(Boss4Target3, bytes, 4);
+
+        WriteBytes(Boss5Target, bytes, 4);
+
+        WriteBytes(Boss6Target, bytes, 4);
+
+        WriteBytes(Boss7Target, bytes, 4);
+        WriteBytes(Boss7Target2, bytes, 4);
+
+        *(int*)bytes = (int)&bossTarget2;
+        WriteBytes(Boss6Target2, bytes, 4);
+
         *(int*)bytes = (int)&camTarget2;
         WriteBytes(CameraCode+2, bytes, 4);
         WriteBytes(CameraCode2+2, bytes, 4);
+        WriteBytes(CameraCode3+1, bytes, 4);
         WriteBytes(IceBossCamXCode + 2, bytes, 4);
         WriteBytes(IceBossCamYCode + 2, bytes, 4);
 		camTarget2.self = &camTarget2;
@@ -243,14 +284,25 @@ public:
 			int nextRoom = ReadValue<int>(NextRoom);
 
             if (ReadValue<int>(AdolRoom) <= 1 || adol < baseAddress) {
-                bossTarget = 0;
+                bossTarget = -1;
+				bossTarget2 = -1;
                 continue;
             }
 
             if (ReadValue<unsigned char>(Fade) < 30) {
                 tarf = 0;
+                bossTarget = 0;
+                bossTarget2 = 0;
+                targetSwitchTimer = 0;
                 continue;
             }
+
+            WriteValue(adol + 0x24, 0.0f); //Reset Adol's speed to prevent sliding
+
+            //if (ReadValue<int>(NextRoom) == 150 || ReadValue<int>(AdolRoom) == 150) {
+            //    WriteValue<char>(TarfToggle, 0); //Keep Tarf active
+            //    return;
+            //}
 
 			bool foundTarf = false;
             TarfScan[0] = AdolData + 4;
@@ -282,7 +334,7 @@ public:
             tarfSaved = ReadValue<char>(BridgeDown) > 0 && ReadValue<int>(NextRoom) == 98;
 
             bool allowTarf = ReadValue<short>(BlackOrbStatus) == 0x0100 || ReadValue<int>(NextRoom) != 98;
-            WriteValue(adol + 0x24, 0.0f); //Reset Adol's speed to prevent sliding
+
             WriteValue<char>(TarfToggle, tarfSaved && allowTarf ? 0 : 44); //Keep Tarf active
             WriteValue<char>(TarfGone, allowTarf ? 0 : 1);
 
@@ -291,8 +343,11 @@ public:
                 //WriteValue(tarf + 0x1D8, 1);  //Character type
                 WriteValue(tarf + 0x1D4, 1);    //Character sprite
                 WriteValue(tarf + 0x1DC, 2);    //Character sprite
-                if(ReadValue<unsigned char>(Fade) < 255)
-                    WriteValue(tarf + 0x60, ReadValue<char>(adol+0x60));    //Collision layer
+                if (ReadValue<unsigned char>(Fade) < 255) {
+                    WriteValue(tarf + 0x60, ReadValue<char>(adol + 0x60));    //Collision layer
+                    if(ReadValue<short>(tarf+0xA0) == 14)
+						WriteValue<short>(tarf+0xA0, ReadValue<short>(adol + 0xA0)); 
+                }
                 float prevMaxHP = ReadValue<short>(TarfStats + 4);
                 WriteValue(TarfStats + 4, ReadValue<short>(adol + 0xA4)); //Copy Tarf's HP from Adol's HP
                 WriteValue(TarfStats + 6, ReadValue<short>(adol + 0xB0)); //Copy Tarf's STR from Adol's STR
