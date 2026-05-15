@@ -1,9 +1,11 @@
 # Ys 1&2 Chronicles Co-Op Mod
 This mod allows another player to join the fun locally. Controls for player 2 are keyboard based but configurable, and something like Steam Input can be used to map a controller to keys.
 
-Player 1 is the main player. Camera will follow him and some interactions are only available to player 1. P1 stats are copied to P2. P2 will teleport to P1 when too far out of view. The distance threshold can be configured. 4:3 aspect ratio setting is recommended for bigger FOV. If either player dies, you lose.
+Player 1 is the main player. Camera will follow him and some interactions are only available to player 1. P1 stats are copied to P2. P2 will teleport to P1 when too far out of view. The distance threshold can be configured. 4:3 aspect ratio setting is recommended for bigger FOV. If either player dies, you lose. Bosses can switch targets between the players.
 
 This mod works for both Ys 1 and Ys 2, although the implementations differ as the games are programmed surprisingly differently. It should work whether you start a new game or load existing unmodded saves or saves made with this mod.
+
+Note that time trial mode does not work properly. It might work to some degree, but it is difficult to test so I haven't worked on that specifically.
 
 ### Install: For both games, simply unzip the mod from the releases into the game folder, next to the exe.
 
@@ -32,7 +34,7 @@ If P2 is not spawned in, try changing rooms.
 P1 and P2 can both use fire and shield magic if it is equipped. MP charge is shared, but total MP is separate.
 
 ## Progress
-I have completed the mod and testing for both games. However, there may still be issues, as later changes can unexpectedly break earlier parts of the games. I may also have overlooked something. There are also some minor issues that I'm aware of, but it's not worth it to me to fix every minor issue. Feel free to play how you want, but sometimes messing around with what the mod allows you to do can break things. If you do run into issues that are preventing you from progressing as expected, please report them to me, preferably with save files included, so I can fix them.
+I have completed the mod and testing for both games, excluding Time Trial. However, there may still be issues, as later changes can unexpectedly break earlier parts of the games. I may also have overlooked something. There are also some minor issues that I'm aware of, but it's not worth it to me to fix every minor issue. Feel free to play how you want, but sometimes messing around with what the mod allows you to do can break things. If you do run into issues that are preventing you from progressing as expected, please report them to me, preferably with save files included, so I can fix them.
 
 ## Compiling from source
 Should be easy. This was done using Visual Studio 2022. I don't think there are any particular dependencies assuming you have the C++ development module, so just clone and open the solution and try building for x86, rename to dbghelp.dll and include the original dbghelp from SysWOW64 as dbghelp_original.dll.
