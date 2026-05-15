@@ -98,8 +98,8 @@ int32_t __fastcall AdolMoveHook(void* arg1) {
 			float fps = ReadValue<int>(baseAddress + 0x25E34C);
             regenTimer1 += 32.5f/fps;
             if (regenTimer1 >= 150.0f) {
-				regenTimer2 += 32.5f / fps;
-                if (regenTimer2 >= 25.0f) {
+                regenTimer2 += (32.5f + ReadValue<int>(tarf+0xA4)*0.1f) / fps;
+                if (regenTimer2 >= (GetKeyState(SPEEDUP) & 0x8000 ? 5.0f : 25.0f)) {
                     regenTimer2 = 0;
 					WriteValue<short>(tarf + 0xA0, ReadValue<short>(tarf + 0xA0) + 1);
                 }
@@ -326,9 +326,13 @@ public:
                     && ReadValue<int>(adol + 0x14C) < 0 && ReadValue<int>(tarf + 0x14C) < 0 && GetKeyState(SPEEDUP) & 0x8000) {
 
                     WriteValue(FrameTime, normalFrameTime2 * 0.4f);
+                    if(ReadValue<float>(RegenTimer+4) < 20.0f)
+                        WriteValue(RegenTimer+4, 23.0f);
+
                 }
-                else if (normalFrameTime2 > 10000)
+                else if (normalFrameTime2 > 10000) {
                     WriteValue(FrameTime, normalFrameTime2);
+                }
             }
 
             tarfSaved = ReadValue<char>(BridgeDown) > 0 && ReadValue<int>(NextRoom) == 98;
@@ -344,7 +348,8 @@ public:
                 WriteValue(tarf + 0x1D4, 1);    //Character sprite
                 WriteValue(tarf + 0x1DC, 2);    //Character sprite
                 if (ReadValue<unsigned char>(Fade) < 255) {
-                    WriteValue(tarf + 0x60, ReadValue<char>(adol + 0x60));    //Collision layer
+                    if(ReadValue<int>(NextRoom) > 1)
+                        WriteValue(tarf + 0x60, ReadValue<char>(adol + 0x60));    //Collision layer
                     if(ReadValue<short>(tarf+0xA0) == 14)
 						WriteValue<short>(tarf+0xA0, ReadValue<short>(adol + 0xA0)); 
                 }
