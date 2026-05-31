@@ -339,6 +339,8 @@ public:
                 WriteValue<int>(FeenaActive + 0x20, 1);   //HP bar
                 //WriteValue(feena, 0x4DAE1C);
                 WriteValue<char>(feena + 0x250, ReadValue<char>(adol + 0x250));
+                if(ReadValue<char>(CanMove)==0)
+                    WriteValue<char>(feena + 0x1E0, 17); //Cutscene flag
                 WriteValue<char>(feena + 0x1CC, ReadValue<char>(adol + 0x1CC)); //Disable Feena specific damage
                 //WriteValue<char>(feena + 0x160, ReadValue<char>(adol + 0x160));
                 WriteValue(feena + 0x4C, ReadValue<int>(adol + 0x4C));    //Character sprite
