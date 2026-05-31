@@ -1,3 +1,5 @@
+<img width="764" height="570" alt="image" src="https://github.com/user-attachments/assets/974102f5-fc13-4dcd-aa9d-db693ae4feeb" />
+
 # Ys 1&2 Chronicles Co-Op Mod
 This mod allows another player to join the fun locally. Controls for player 2 are keyboard based but configurable, and something like Steam Input can be used to map a controller to keys.
 
@@ -13,6 +15,8 @@ To uninstall, remove the dbghelp dll files. If loading a co-op save, it should r
 
 ## Additional Feature: Quicksave
 Press the quicksave button as defined in the coop_config.txt at any time that you can normally save, to save without interrupting gameplay. You can configure save slots that will be used for quicksaves and it will cycle through those slots. Even in singleplayer, it's a good idea to make frequent saves in these games, but that's inconvenient to do in multiplayer, which is why I added quicksaves. I also highly recommend saving often in case of any game breaking issues caused by the mod.
+
+<img width="206" height="183" alt="image" src="https://github.com/user-attachments/assets/2e451efb-372d-4c8d-9eeb-1db005f21ef0" />
 
 ## Additional Feature: Regen Speedup
 Press the speedup button as defined in the coop_config.txt at any time that you can regen HP to speed it up. It's a bit different between the games, but in both cases it makes the game faster while standing still, so make sure the area is safe first. The sped up regen helps minimize downtime, which is an issue that is especially apparent in co-op, which is why I added this feature.
