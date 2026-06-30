@@ -24,11 +24,6 @@ template void WriteValue<char>(int offsets[], int count, char value);
 template void WriteValue<char>(int offset, char value);
 
 int baseAddress = 0;
-char UP = 'I', DOWN = 'K', LEFT = 'J', RIGHT = 'L', WALK = 'U', ACTION = 'H', SAVE = 'P', SPEEDUP = 'M';
-float maxDistanceX = 250.0f;
-float maxDistanceY = 400.0f;
-int minQuicksave = 110;
-int maxQuicksave = 120;
 
 int FindPointer(int offsets[], int count)
 {

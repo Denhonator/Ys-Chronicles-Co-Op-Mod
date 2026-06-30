@@ -86,8 +86,7 @@
       <EnableUAC>false</EnableUAC>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(TargetPath) "C:\Program Files (x86)\Steam\steamapps\common\Ys II\dbghelp.dll"
-copy $(TargetPath) "C:\Program Files (x86)\Steam\steamapps\common\Ys I\dbghelp.dll"</Command>
+      <Command>copy $(TargetPath) "F:\Games\EvaliceSaga\version.dll"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -107,8 +106,8 @@ copy $(TargetPath) "C:\Program Files (x86)\Steam\steamapps\common\Ys I\dbghelp.d
       <EnableUAC>false</EnableUAC>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(TargetPath) "C:\Program Files (x86)\Steam\steamapps\common\Ys II\dbghelp.dll"
-copy $(TargetPath) "C:\Program Files (x86)\Steam\steamapps\common\Ys I\dbghelp.dll"</Command>
+      <Command>copy $(TargetPath) "F:\Games\EvaliceSaga\version.dll"
+copy $(TargetPath)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -144,6 +143,7 @@ copy $(TargetPath) "C:\Program Files (x86)\Steam\steamapps\common\Ys I\dbghelp.d
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="evalice.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="pch.h" />

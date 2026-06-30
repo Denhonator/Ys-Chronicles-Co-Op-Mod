@@ -1,11 +1,6 @@
 #pragma once
 
 extern int baseAddress;
-extern char UP, DOWN, LEFT, RIGHT, WALK, ACTION, SAVE, SPEEDUP;
-extern int minQuicksave;
-extern int maxQuicksave;
-extern float maxDistanceX;
-extern float maxDistanceY;
 
 extern int FindPointer(int offsets[], int count);
 template<typename T> extern T ReadValue(int offsets[], int count);
